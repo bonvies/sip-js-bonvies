@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Container, Grid2 as Grid, Button, Typography, Stack } from '@mui/material';
 import useSip from '../hooks/useSip';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { initUserAgent, startUserAgent, makeCall } = useSip();
+  const { startUserAgent, makeCall } = useSip();
+
+  // 初始化 UserAgent
+
 
   const handleButtonClick = (value: string) => {
     setCallNumber((prev) => prev + value);
@@ -20,16 +23,13 @@ export default function Dialer() {
 
   const handleCall = () => {
     console.log('Call:', callNumber);
+
     if (callNumber) {
       startUserAgent();
       console.log('Call:', callNumber);
       makeCall(callNumber);
     }
   };
-
-  useEffect(() => {
-    initUserAgent();
-  }, [initUserAgent]);
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
