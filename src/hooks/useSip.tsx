@@ -5,7 +5,7 @@ import { useCallStateStore } from '../stores/CallState';
 
 export default function useSip() {
   // 從狀態管理中獲取設置和通話狀態的更新函數
-  const { setCallState } = useCallStateStore();
+  const { setSipState, setCallState, setSipError } = useCallStateStore();
   const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore();
 
   // 狀態管理：UserAgent 和 Inviter
@@ -43,33 +43,33 @@ export default function useSip() {
   const startUserAgent = useCallback(async () => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
-      setCallState('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
       return;
     }
     try {
       await userAgentState.start(); // 啟動 UserAgent
-      setCallState('UserAgent started');
+      setSipState('UserAgent started');
     } catch (error) {
       console.error('Failed to start UserAgent:', error);
-      setCallState('Failed to start UserAgent');
+      setSipError('Failed to start UserAgent');
     }
-  }, [userAgentState, setCallState]);
+  }, [userAgentState, setSipError, setSipState]);
 
   // 停止 UserAgent
   const stopUserAgent = useCallback(async () => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
-      setCallState('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
       return;
     }
     try {
       await userAgentState.stop(); // 停止 UserAgent
-      setCallState('UserAgent stopped');
+      setSipState('UserAgent stopped');
     } catch (error) {
       console.error('Failed to stop UserAgent:', error);
-      setCallState('Failed to stop UserAgent');
+      setSipError('Failed to stop UserAgent');
     }
-  }, [userAgentState, setCallState]);
+  }, [userAgentState, setSipError, setSipState]);
 
   // 處理會話狀態變更
   const handleSessionStateChange = useCallback((state: SessionState, inviter: Inviter) => {
@@ -98,7 +98,7 @@ export default function useSip() {
       case SessionState.Terminated:
         setCallState("Terminated"); // 設置通話狀態為已終止
         setTimeout(() => {
-          setCallState(''); // 清除通話狀態
+          setCallState(null); // 清除通話狀態
         }, 1500);
         setCurrentInviter(null); // 清除當前的 Inviter 實例
         break;
@@ -112,7 +112,7 @@ export default function useSip() {
     const targetURI = UserAgent.makeURI(`sip:${phoneNumber}@${domainList[0]}`); // 創建目標 SIP URI
     if (!targetURI || !userAgentState) {
       console.error('Invalid target URI or UserAgent not initialized');
-      setCallState('Invalid target URI or UserAgent not initialized');
+      setSipState('Invalid target URI or UserAgent not initialized');
       return;
     }
     const inviter = new Inviter(userAgentState, targetURI); // 創建 Inviter 實例
@@ -122,33 +122,49 @@ export default function useSip() {
       setCurrentInviter(inviter); // 設置當前的 Inviter 實例
     } catch (error) {
       console.error('Failed to make call:', error);
-      setCallState('Failed to make call');
+      setSipError('Failed to make call');
     }
-  }, [domainList, userAgentState, setCallState, handleSessionStateChange]);
+  }, [domainList, userAgentState, setSipState, handleSessionStateChange, setSipError]);
 
   // 發起呼叫
   const makeCall = useCallback((phoneNumber: string) => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
-      setCallState('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
       return;
     }
 
     initInviter(phoneNumber); // 初始化 Inviter 並發起呼叫
-  }, [userAgentState, initInviter, setCallState]);
+  }, [userAgentState, initInviter, setSipError]);
 
-  // 掛斷呼叫
-  const hangUpCall = useCallback(() => {
+  // 掛斷或取消呼叫
+  const hangUpCall = useCallback(async () => {
     if (currentInviter) {
-      currentInviter.bye().then(() => {
-        setCallState('Call ended'); // 設置通話狀態為已結束
-        setCurrentInviter(null); // 清除當前的 Inviter 實例
-      }).catch((error) => {
-        console.error('Failed to end call:', error);
-        setCallState('Failed to end call');
-      });
+      // 根據當前會話的狀態來決定取消或掛斷
+      if (currentInviter.state === SessionState.Establishing) {
+        // 如果呼叫正在建立，則取消呼叫
+        try {
+          await currentInviter.cancel()
+          setSipState("Call canceled");
+        } catch (error) {
+          console.error('Failed to cancel call:', error);
+          setSipError('Failed to cancel call');
+        }
+      } else {
+        // 如果呼叫已建立，則掛斷通話
+        try {
+          await currentInviter.bye()
+          setSipState("Call ended");
+        } catch (error) {
+          console.error('Failed to end call:', error);
+          setSipError('Failed to end call');
+        }
+      }
+      setCurrentInviter(null); // 清除當前的 Inviter 實例
+    } else {
+      setSipState('No active call to hang up or cancel');
     }
-  }, [currentInviter, setCallState]);
+  }, [currentInviter, setSipError, setSipState]);
 
   // 初始化 UserAgent 並在組件卸載時停止 UserAgent
   useEffect(() => {
