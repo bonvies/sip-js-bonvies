@@ -92,7 +92,7 @@ export default function useSip() {
           }
           audioRef.current.srcObject = remoteStream; // 將音訊流設置到音訊元素中
           audioRef.current.play().catch(error => console.error('Failed to play audio:', error)); // 播放音訊
-        }
+        };
         break;
       }
       case SessionState.Terminated:
@@ -166,6 +166,16 @@ export default function useSip() {
     }
   }, [currentInviter, setSipError, setSipState]);
 
+  // 發送 DTMF (處理分機選擇用的)
+  const sendDtmf = useCallback((digit: string) => {
+    if (currentInviter && currentInviter.state === SessionState.Established) {
+      const sessionDescriptionHandler = currentInviter.sessionDescriptionHandler;
+      if (sessionDescriptionHandler) {
+        sessionDescriptionHandler.sendDtmf(digit);
+      }
+    }
+  }, [currentInviter]);
+
   // 初始化 UserAgent 並在組件卸載時停止 UserAgent
   useEffect(() => {
     initUserAgent();
@@ -181,6 +191,7 @@ export default function useSip() {
     stopUserAgent,
     makeCall,
     hangUpCall,
+    sendDtmf,
     audioRef,
   };
 }

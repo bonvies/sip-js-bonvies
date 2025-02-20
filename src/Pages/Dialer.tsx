@@ -5,11 +5,20 @@ import { useCallStateStore } from '../stores/CallState';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { startUserAgent, makeCall, audioRef, hangUpCall } = useSip();
-   const { callState } = useCallStateStore();
+  const { audioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
+  const { callState } = useCallStateStore();
 
-  const handleButtonClick = (value: string) => {
-    setCallNumber((prev) => prev + value);
+  const handleDialButtonClick = (value: string) => {
+    // 如果不是通話狀態，則輸入號碼
+    if (!callState) {
+      setCallNumber((prev) => prev + value);
+    }
+
+    // 如果是通話狀態，則播送分機
+    if (callState === 'Established') {
+      sendDtmf(value);
+      return;
+    }
   };
 
   const handleClear = () => {
@@ -36,9 +45,7 @@ export default function Dialer() {
     setCallNumber('');
   };
 
-
   const showCallState = useMemo(() => {
-
     switch (callState) {
       case 'Establishing':
         return '撥號中';
@@ -49,7 +56,7 @@ export default function Dialer() {
       default:
         return callNumber ? callNumber : '請輸入撥打號碼';
     }
-  },[callNumber, callState]);
+  }, [callNumber, callState]);
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
@@ -63,7 +70,7 @@ export default function Dialer() {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => handleButtonClick(item)}
+              onClick={() => handleDialButtonClick(item)}
               sx={{ height: 60 }}
             >
               {item}
@@ -106,7 +113,7 @@ export default function Dialer() {
           onClick={handleHangUpCall}
           sx={{ my: 2 }}
         >
-          hangUpCall
+          Hang Up
         </Button>
       }
       <Divider>指定撥打對象</Divider>
