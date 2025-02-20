@@ -17,6 +17,10 @@ export default function useSip() {
   const domainList = domain.split(','); // 將域名以逗號分割成陣列
   const uri = UserAgent.makeURI(`sip:${username}@${domainList[0]}`); // 使用第一個域名創建 SIP URI
 
+  // 音效
+  const dtmfAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ringbackAudioRef = useRef<HTMLAudioElement | null>(null);
+
   // 初始化 UserAgent
   const initUserAgent = useCallback(() => {
     if (!uri || !wsServer) {
@@ -71,15 +75,41 @@ export default function useSip() {
     }
   }, [userAgentState, setSipError, setSipState]);
 
+  // 播放 DTMF 音效
+  const playDtmfSound = useCallback(() => {
+    if (dtmfAudioRef.current) {
+      dtmfAudioRef.current.currentTime = 0; // 重置播放時間
+      dtmfAudioRef.current.play().catch(error => console.error('Failed to play DTMF sound:', error));
+    }
+  }, []);
+
+  // 播放 Ringback Tone
+  const playRingbackTone = useCallback(() => {
+    if (ringbackAudioRef.current) {
+      ringbackAudioRef.current.loop = true; // 設置為循環播放
+      ringbackAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
+    }
+  }, []);
+
+  // 停止 Ringback Tone
+  const stopRingbackTone = useCallback(() => {
+    if (ringbackAudioRef.current) {
+      ringbackAudioRef.current.pause();
+      ringbackAudioRef.current.currentTime = 0; // 重置播放時間
+    }
+  }, []);
+
   // 處理會話狀態變更
   const handleSessionStateChange = useCallback((state: SessionState, inviter: Inviter) => {
     switch (state) {
       case SessionState.Establishing: {
         setCallState("Establishing"); // 設置通話狀態為正在建立
+        playRingbackTone(); // 播放 Ringback Tone
         break;
       }
       case SessionState.Established: {
         setCallState("Established"); // 設置通話狀態為已建立
+        stopRingbackTone(); // 停止 Ringback Tone
         // 獲取並播放遠端音訊
         if (audioRef.current && inviter) {
           const remoteStream = new MediaStream();
@@ -97,6 +127,7 @@ export default function useSip() {
       }
       case SessionState.Terminated:
         setCallState("Terminated"); // 設置通話狀態為已終止
+        stopRingbackTone(); // 停止 Ringback Tone
         setTimeout(() => {
           setCallState(null); // 清除通話狀態
         }, 1500);
@@ -105,7 +136,7 @@ export default function useSip() {
       default:
         break;
     }
-  }, [setCallState]);
+  }, [playRingbackTone, setCallState, stopRingbackTone]);
 
   // 初始化 Inviter 並發起呼叫
   const initInviter = useCallback(async (phoneNumber: string) => {
@@ -168,13 +199,14 @@ export default function useSip() {
 
   // 發送 DTMF (處理分機選擇用的)
   const sendDtmf = useCallback((digit: string) => {
+    playDtmfSound(); // 播放 DTMF 音效
     if (currentInviter && currentInviter.state === SessionState.Established) {
       const sessionDescriptionHandler = currentInviter.sessionDescriptionHandler;
       if (sessionDescriptionHandler) {
         sessionDescriptionHandler.sendDtmf(digit);
       }
     }
-  }, [currentInviter]);
+  }, [currentInviter, playDtmfSound]);
 
   // 初始化 UserAgent 並在組件卸載時停止 UserAgent
   useEffect(() => {
@@ -193,5 +225,7 @@ export default function useSip() {
     hangUpCall,
     sendDtmf,
     audioRef,
+    dtmfAudioRef,
+    ringbackAudioRef,
   };
 }

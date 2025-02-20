@@ -3,21 +3,19 @@ import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@m
 import useSip from '../hooks/useSip';
 import { useCallStateStore } from '../stores/CallState';
 
+import dtnf from '../assets/dtmf.mp3';
+import ringbacktone from '../assets/ringbacktone.mp3';
+
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { audioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
+  const { audioRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
   const { callState } = useCallStateStore();
 
   const handleDialButtonClick = (value: string) => {
-    // 如果不是通話狀態，則輸入號碼
-    if (!callState) {
+    if (!callState || callState === 'Established') {
       setCallNumber((prev) => prev + value);
-    }
-
-    // 如果是通話狀態，則播送分機
-    if (callState === 'Established') {
+      // 播送分機
       sendDtmf(value);
-      return;
     }
   };
 
@@ -38,6 +36,7 @@ export default function Dialer() {
       startUserAgent();
       makeCall(callNumber);
     }
+    setCallNumber('');
   };
 
   const handleHangUpCall = () => {
@@ -147,6 +146,8 @@ export default function Dialer() {
       >
         Call 智能客服中心
       </Button>
+      <audio ref={dtmfAudioRef} src={dtnf} />
+      <audio ref={ringbackAudioRef} src={ringbacktone} />
     </Container>
   );
 }
