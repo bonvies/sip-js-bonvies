@@ -7,8 +7,8 @@ import '@fontsource/roboto/700.css';
 import './normalize.css';
 import './index.css';
 
-import Router from "./router/Router.tsx";
+import App from "./App";
 
 createRoot(document.getElementById('root')!).render(
-  <Router />,
+  <App />,
 )
