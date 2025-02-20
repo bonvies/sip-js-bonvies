@@ -4,7 +4,7 @@ import useSip from '../hooks/useSip';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { startUserAgent, makeCall } = useSip();
+  const { startUserAgent, makeCall, audioRef, hangUpCall } = useSip();
 
   // 初始化 UserAgent
 
@@ -33,6 +33,7 @@ export default function Dialer() {
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
+      <audio ref={audioRef} autoPlay />
       <Typography variant="h4" align="center" sx={{ mb: 2 }}>
         {callNumber ? callNumber : '請輸入撥打號碼'}
       </Typography>
@@ -76,6 +77,14 @@ export default function Dialer() {
           Fix
         </Button>
       </Stack>
+      <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          onClick={hangUpCall}
+        >
+          hangUpCall
+        </Button>
     </Container>
   );
 }
