@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Container, Grid2 as Grid, Button, Typography, Stack } from '@mui/material';
+import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@mui/material';
 import useSip from '../hooks/useSip';
 import { useCallStateStore } from '../stores/CallState';
 
@@ -20,7 +20,11 @@ export default function Dialer() {
     setCallNumber((prev) => prev.slice(0, -1));
   };
 
-  const handleCall = () => {
+  const handleCall = (_event: React.MouseEvent<HTMLButtonElement>, phoneNumber: string | null = null) => {
+    if (phoneNumber) {
+      startUserAgent();
+      makeCall(phoneNumber);
+    }
     if (callNumber) {
       startUserAgent();
       makeCall(callNumber);
@@ -68,7 +72,7 @@ export default function Dialer() {
         ))}
       </Grid>
       {!callState ? 
-        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ my: 2 }}>
           <Button
             fullWidth
             variant="contained"
@@ -100,11 +104,42 @@ export default function Dialer() {
           variant="contained"
           color="primary"
           onClick={handleHangUpCall}
-          sx={{ mt: 2 }}
+          sx={{ my: 2 }}
         >
           hangUpCall
         </Button>
       }
+      <Divider>指定撥打對象</Divider>
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={(e) => handleCall(e, '0915970815')}
+        disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+        sx={{ mt: 2 }}
+      >
+        Call Leo
+      </Button>
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={(e) => handleCall(e, '0902213273')}
+        disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+        sx={{ mt: 2 }}
+      >
+        Call Aya
+      </Button>
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={(e) => handleCall(e, '77505134')}
+        disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+        sx={{ mt: 2 }}
+      >
+        Call 智能客服中心
+      </Button>
     </Container>
   );
 }
