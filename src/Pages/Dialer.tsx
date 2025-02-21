@@ -8,7 +8,7 @@ import ringbacktone from '../assets/ringbacktone.mp3';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { audioRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
+  const { remoteAudioRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
   const { callState } = useCallStateStore();
 
   const handleDialButtonClick = (value: string) => {
@@ -72,7 +72,7 @@ export default function Dialer() {
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
-      <audio ref={audioRef} autoPlay />
+      <audio ref={remoteAudioRef} autoPlay />
       <Typography variant="h4" align="center" sx={{ mb: 2 }}>
         {showCallState}
       </Typography>

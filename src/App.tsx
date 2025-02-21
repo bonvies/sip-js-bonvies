@@ -1,26 +1,30 @@
 import { Container, Tabs, Tab } from '@mui/material';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import Dialer from "./Pages/Dialer";
+import Calls from "./Pages/Calls";
+import Settings from "./Pages/Settings";
 
 export default function App() {
-  const location = useLocation();
-  const [tabValue, setTabValue] = useState(location.pathname);
+  const [tabValue, setTabValue] = useState(0);
 
-  useEffect(() => {
-    setTabValue(location.pathname);
-  }, [location.pathname]);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   return (
     <Container maxWidth="xs" sx={{ height: '100%'}}>
       <Tabs
         value={tabValue}
+        onChange={handleTabChange}
         variant="fullWidth"
       >
-        <Tab label="Dialer" component={Link} to="/" value="/" />
-        <Tab label="Calls" component={Link} to="/calls" value="/calls" />
-        <Tab label="Settings" component={Link} to="/settings" value="/settings" />
+        <Tab label="Dialer" />
+        <Tab label="Calls" />
+        <Tab label="Settings" />
       </Tabs>
-      <Outlet />
+      {tabValue === 0 && <Dialer />}
+      {tabValue === 1 && <Calls />}
+      {tabValue === 2 && <Settings />}
     </Container>
   );
 }
