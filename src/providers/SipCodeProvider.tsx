@@ -3,24 +3,25 @@ import { UserAgent, Inviter, SessionState } from 'sip.js';
 import { useSettingsStore } from '../stores/SipSetting';
 import { useCallStateStore } from '../stores/CallState';
 
-// 創建一個 Context
+// 創建一個 Context，定義 SIP 應用的功能和狀態
 type SipCodeContextType = {
-  initUserAgent: () => void;
-  startUserAgent: () => Promise<void>;
-  stopUserAgent: () => Promise<void>;
-  makeCall: (phoneNumber: string) => void;
-  hangUpCall: () => Promise<void>;
-  sendDtmf: (digit: string) => void;
-  playRemoteAudio: (remoteStream: MediaStream) => void;
-  playRemoteVideo: (remoteStream: MediaStream) => void;
-  playLocalVideo: () => Promise<void>;
-  remoteAudioRef: React.RefObject<HTMLAudioElement | null>;
-  localVideoRef: React.RefObject<HTMLVideoElement | null>;
-  remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
-  dtmfAudioRef: React.RefObject<HTMLAudioElement | null>;
-  ringbackAudioRef: React.RefObject<HTMLAudioElement | null>;
+  initUserAgent: () => void; // 初始化 UserAgent
+  startUserAgent: () => Promise<void>; // 啟動 UserAgent
+  stopUserAgent: () => Promise<void>; // 停止 UserAgent
+  makeCall: (phoneNumber: string) => void; // 發起通話
+  hangUpCall: () => Promise<void>; // 結束通話
+  sendDtmf: (digit: string) => void; // 發送 DTMF 音
+  playRemoteAudio: (remoteStream: MediaStream) => void; // 播放遠端音頻
+  playRemoteVideo: (remoteStream: MediaStream) => void; // 播放遠端視頻
+  playLocalVideo: () => Promise<void>; // 播放本地視頻
+  remoteAudioRef: React.RefObject<HTMLAudioElement | null>; // 遠端音頻引用
+  localVideoRef: React.RefObject<HTMLVideoElement | null>; // 本地視頻引用
+  remoteVideoRef: React.RefObject<HTMLVideoElement | null>; // 遠端視頻引用
+  dtmfAudioRef: React.RefObject<HTMLAudioElement | null>; // DTMF 音頻引用
+  ringbackAudioRef: React.RefObject<HTMLAudioElement | null>; // 回鈴音音頻引用
 }
 
+// 創建一個 Context，提供預設值
 const SipCodeContext = createContext<SipCodeContextType>({
   initUserAgent: () => {},
   startUserAgent: async () => {},
@@ -38,24 +39,25 @@ const SipCodeContext = createContext<SipCodeContextType>({
   ringbackAudioRef: { current: null as HTMLAudioElement | null },
 });
 
-// 創建一個 Provider 組件
+// 創建一個 Provider 組件，提供 SIP 功能和狀態
 export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { setSipState, setCallState, setSipError } = useCallStateStore();
-  const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore();
+  const { setSipState, setCallState, setSipError } = useCallStateStore(); // 使用 CallState store
+  const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore(); // 使用 Settings store
 
-  const [userAgentState, setUserAgentState] = useState<UserAgent>();
-  const [currentInviter, setCurrentInviter] = useState<Inviter | null>();
+  const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
+  const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
 
-  const remoteAudioRef = useRef<HTMLAudioElement>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
+  const localVideoRef = useRef<HTMLVideoElement>(null); // 本地視頻引用
+  const remoteVideoRef = useRef<HTMLVideoElement>(null); // 遠端視頻引用
 
-  const domainList = domain.split(',');
-  const uri = UserAgent.makeURI(`sip:${username}@${domainList[0]}`);
+  const domainList = domain.split(','); // 分割 SIP 域
+  const uri = UserAgent.makeURI(`sip:${username}@${domainList[0]}`); // 創建 URI
 
-  const dtmfAudioRef = useRef<HTMLAudioElement>(null);
-  const ringbackAudioRef = useRef<HTMLAudioElement>(null);
+  const dtmfAudioRef = useRef<HTMLAudioElement>(null); // DTMF 音頻引用
+  const ringbackAudioRef = useRef<HTMLAudioElement>(null); // 回鈴音音頻引用
 
+  // 初始化 UserAgent
   const initUserAgent = useCallback(() => {
     if (!uri || !wsServer) {
       return null;
@@ -77,6 +79,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [uri, wsServer, displayName, username, password]);
 
+  // 啟動 UserAgent
   const startUserAgent = useCallback(async () => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
@@ -92,6 +95,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [userAgentState, setSipError, setSipState]);
 
+  // 停止 UserAgent
   const stopUserAgent = useCallback(async () => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
@@ -107,6 +111,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [userAgentState, setSipError, setSipState]);
 
+  // 播放 DTMF 音效
   const playDtmfSound = useCallback(() => {
     if (dtmfAudioRef.current) {
       dtmfAudioRef.current.currentTime = 0;
@@ -114,6 +119,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 播放回鈴音
   const playRingbackTone = useCallback(() => {
     if (ringbackAudioRef.current) {
       ringbackAudioRef.current.loop = true;
@@ -121,6 +127,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 停止回鈴音
   const stopRingbackTone = useCallback(() => {
     if (ringbackAudioRef.current) {
       ringbackAudioRef.current.pause();
@@ -128,6 +135,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 播放遠端音頻
   const playRemoteAudio = useCallback((remoteStream: MediaStream) => {
     if (remoteAudioRef.current) {
       remoteAudioRef.current.srcObject = remoteStream;
@@ -135,6 +143,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 播放遠端視頻
   const playRemoteVideo = useCallback((remoteStream: MediaStream) => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
@@ -142,6 +151,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 播放本地視頻
   const playLocalVideo = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -155,6 +165,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
+  // 處理會話狀態變更
   const handleSessionStateChange = useCallback((state: SessionState, inviter: Inviter) => {
     switch (state) {
       case SessionState.Establishing: {
@@ -195,6 +206,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [playRemoteAudio, playRemoteVideo, playRingbackTone, setCallState, stopRingbackTone]);
 
+  // 初始化 Inviter
   const initInviter = useCallback(async (phoneNumber: string) => {
     const targetURI = UserAgent.makeURI(`sip:${phoneNumber}@${domainList[0]}`);
     if (!targetURI || !userAgentState) {
@@ -220,6 +232,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [domainList, userAgentState, setSipState, handleSessionStateChange, setSipError]);
 
+  // 發起通話
   const makeCall = useCallback((phoneNumber: string) => {
     if (!userAgentState) {
       console.error('UserAgent not initialized');
@@ -230,6 +243,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     initInviter(phoneNumber);
   }, [userAgentState, initInviter, setSipError]);
 
+  // 結束通話
   const hangUpCall = useCallback(async () => {
     if (currentInviter) {
       if (currentInviter.state === SessionState.Establishing) {
@@ -255,6 +269,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [currentInviter, setSipError, setSipState]);
 
+  // 發送 DTMF 音
   const sendDtmf = useCallback((digit: string) => {
     playDtmfSound();
     if (currentInviter && currentInviter.state === SessionState.Established) {
@@ -265,6 +280,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [currentInviter, playDtmfSound]);
 
+  // 提供 SIP 功能和狀態給子組件
   return (
     <SipCodeContext.Provider value={{
       initUserAgent,
