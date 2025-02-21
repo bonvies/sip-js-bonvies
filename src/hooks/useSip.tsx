@@ -11,7 +11,7 @@ export default function useSip() {
   // 狀態管理：UserAgent 和 Inviter
   const [userAgentState, setUserAgentState] = useState<UserAgent | null>(null); // 用於管理 SIP UserAgent 的狀態
   const [currentInviter, setCurrentInviter] = useState<Inviter | null>(null); // 用於管理當前的 Inviter 實例
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null); // 用於管理音訊元素的 ref
+  const audioRef = useRef<HTMLAudioElement | null>(null); // 用於管理音訊元素的 ref
 
   // 分割域名並創建 SIP URI
   const domainList = domain.split(','); // 將域名以逗號分割成陣列
@@ -108,10 +108,10 @@ export default function useSip() {
         break;
       }
       case SessionState.Established: {
-        setCallState("Established"); // 設置通話狀態為已建立
-        stopRingbackTone(); // 停止 Ringback Tone
-        // 獲取並播放遠端音訊
-        if (remoteAudioRef.current && inviter) {
+        setCallState("Established");
+        stopRingbackTone();
+      
+        if (audioRef.current && inviter) {
           const remoteStream = new MediaStream();
           if (inviter.sessionDescriptionHandler) {
             const peerConnection = (inviter.sessionDescriptionHandler as any).peerConnection;
@@ -135,9 +135,7 @@ export default function useSip() {
               videoElement.play().catch(error => console.error('Failed to play video:', error));
             }
           }
-          remoteAudioRef.current.srcObject = remoteStream; // 將音訊流設置到音訊元素中
-          remoteAudioRef.current.play().catch(error => console.error('Failed to play audio:', error)); // 播放音訊
-        };
+        }
         break;
       }
       case SessionState.Terminated:
@@ -246,7 +244,7 @@ export default function useSip() {
     makeCall,
     hangUpCall,
     sendDtmf,
-    remoteAudioRef,
+    audioRef,
     dtmfAudioRef,
     ringbackAudioRef,
   };
