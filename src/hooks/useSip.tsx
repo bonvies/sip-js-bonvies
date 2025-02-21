@@ -254,15 +254,6 @@ export default function useSip() {
     }
   }, [currentInviter, playDtmfSound]);
 
-  // 初始化 UserAgent 並在組件卸載時停止 UserAgent
-  useEffect(() => {
-    initUserAgent();
-    return () => {
-      stopUserAgent();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return {
     initUserAgent,
     startUserAgent,
