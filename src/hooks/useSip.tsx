@@ -11,7 +11,11 @@ export default function useSip() {
   // 狀態管理：UserAgent 和 Inviter
   const [userAgentState, setUserAgentState] = useState<UserAgent | null>(null); // 用於管理 SIP UserAgent 的狀態
   const [currentInviter, setCurrentInviter] = useState<Inviter | null>(null); // 用於管理當前的 Inviter 實例
-  const audioRef = useRef<HTMLAudioElement | null>(null); // 用於管理音訊元素的 ref
+
+  // 媒體元素
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null); // 管理遠端音訊元素
+  const localVideoRef = useRef<HTMLVideoElement | null>(null); // 管理本地視訊元素
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null); // 管理遠端視訊元素
 
   // 分割域名並創建 SIP URI
   const domainList = domain.split(','); // 將域名以逗號分割成陣列
@@ -99,6 +103,36 @@ export default function useSip() {
     }
   }, []);
 
+  // 播放遠端音訊
+  const playRemoteAudio = useCallback((remoteStream: MediaStream) => {
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().catch(error => console.error('Failed to play audio:', error));
+    }
+  }, []);
+
+  // 播放遠端視訊
+  const playRemoteVideo = useCallback((remoteStream: MediaStream) => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current?.play().catch(error => console.error('Failed to play video:', error));
+    }
+  }, []);
+
+  // 播放本地視訊
+  const playLocalVideo = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      const localVideoElement = localVideoRef.current as HTMLVideoElement;
+      if (localVideoElement) {
+        localVideoElement.srcObject = stream;
+        localVideoElement.play().catch(error => console.error('Failed to play local video:', error));
+      }
+    } catch (error) {
+      console.error('Failed to get local media:', error);
+    }
+  }, []);
+
   // 處理會話狀態變更
   const handleSessionStateChange = useCallback((state: SessionState, inviter: Inviter) => {
     switch (state) {
@@ -111,10 +145,10 @@ export default function useSip() {
         setCallState("Established");
         stopRingbackTone();
       
-        if (audioRef.current && inviter) {
+        if (inviter) {
           const remoteStream = new MediaStream();
           if (inviter.sessionDescriptionHandler) {
-            const peerConnection = (inviter.sessionDescriptionHandler as any).peerConnection;
+            const peerConnection = (inviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
             peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
               if (receiver.track) {
                 remoteStream.addTrack(receiver.track);
@@ -122,18 +156,10 @@ export default function useSip() {
             });
       
             // 播放音訊
-            audioRef.current.srcObject = remoteStream;
-            audioRef.current.play().catch(error => console.error('Failed to play audio:', error));
-      
+            playRemoteAudio(remoteStream);
+
             // 播放視訊
-            const videoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
-            if (videoElement) {
-              console.warn('抓取遠端視訊流 :', videoElement, remoteStream);
-              console.warn(remoteStream.getTracks());
-              console.warn(remoteStream.getVideoTracks());
-              videoElement.srcObject = remoteStream;
-              videoElement.play().catch(error => console.error('Failed to play video:', error));
-            }
+            playRemoteVideo(remoteStream);
           }
         }
         break;
@@ -149,7 +175,7 @@ export default function useSip() {
       default:
         break;
     }
-  }, [playRingbackTone, setCallState, stopRingbackTone]);
+  }, [playRemoteAudio, playRemoteVideo, playRingbackTone, setCallState, stopRingbackTone]);
 
   // 初始化 Inviter 並發起呼叫
   const initInviter = useCallback(async (phoneNumber: string) => {
@@ -244,7 +270,12 @@ export default function useSip() {
     makeCall,
     hangUpCall,
     sendDtmf,
-    audioRef,
+    playRemoteAudio,
+    playRemoteVideo,
+    playLocalVideo,
+    remoteAudioRef,
+    localVideoRef,
+    remoteVideoRef,
     dtmfAudioRef,
     ringbackAudioRef,
   };

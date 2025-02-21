@@ -8,7 +8,7 @@ import ringbacktone from '../assets/ringbacktone.mp3';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { audioRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall } = useSip();
+  const { remoteAudioRef, localVideoRef, remoteVideoRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall, playLocalVideo } = useSip();
   const { callState } = useCallStateStore();
 
   const handleDialButtonClick = (value: string) => {
@@ -58,21 +58,13 @@ export default function Dialer() {
   }, [callNumber, callState]);
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
-      .then(stream => {
-        // 將本地視訊流設置到視訊元素中
-        const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
-        if (localVideoElement) {
-          localVideoElement.srcObject = stream;
-          localVideoElement.play().catch(error => console.error('Failed to play local video:', error));
-        }
-      })
-      .catch(error => console.error('Failed to get local media:', error));
+    playLocalVideo();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
-      <audio ref={audioRef} autoPlay />
+      <audio ref={remoteAudioRef} autoPlay />
       <Typography variant="h4" align="center" sx={{ mb: 2 }}>
         {showCallState}
       </Typography>
@@ -159,8 +151,8 @@ export default function Dialer() {
       >
         Call 智能客服中心
       </Button>
-      <video id="localVideo" width='100%' autoPlay playsInline muted></video>
-      <video id="remoteVideo" width='100%' autoPlay playsInline></video>
+      <video ref={localVideoRef} width='100%' autoPlay playsInline muted></video>
+      <video ref={remoteVideoRef} width='100%' autoPlay playsInline></video>
       <audio ref={dtmfAudioRef} src={dtnf} />
       <audio ref={ringbackAudioRef} src={ringbacktone} />
     </Container>
