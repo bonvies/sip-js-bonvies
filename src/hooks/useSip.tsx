@@ -108,21 +108,34 @@ export default function useSip() {
         break;
       }
       case SessionState.Established: {
-        setCallState("Established"); // 設置通話狀態為已建立
-        stopRingbackTone(); // 停止 Ringback Tone
-        // 獲取並播放遠端音訊
+        setCallState("Established");
+        stopRingbackTone();
+      
         if (audioRef.current && inviter) {
           const remoteStream = new MediaStream();
           if (inviter.sessionDescriptionHandler) {
-            (inviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+            const peerConnection = (inviter.sessionDescriptionHandler as any).peerConnection;
+            peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
               if (receiver.track) {
-                remoteStream.addTrack(receiver.track); // 將接收到的音訊軌道添加到音訊流中
+                remoteStream.addTrack(receiver.track);
               }
             });
+      
+            // 播放音訊
+            audioRef.current.srcObject = remoteStream;
+            audioRef.current.play().catch(error => console.error('Failed to play audio:', error));
+      
+            // 播放視訊
+            const videoElement = document.getElementById('remoteVideo') as HTMLVideoElement;
+            if (videoElement) {
+              console.warn('抓取遠端視訊流 :', videoElement, remoteStream);
+              console.warn(remoteStream.getTracks());
+              console.warn(remoteStream.getVideoTracks());
+              videoElement.srcObject = remoteStream;
+              videoElement.play().catch(error => console.error('Failed to play video:', error));
+            }
           }
-          audioRef.current.srcObject = remoteStream; // 將音訊流設置到音訊元素中
-          audioRef.current.play().catch(error => console.error('Failed to play audio:', error)); // 播放音訊
-        };
+        }
         break;
       }
       case SessionState.Terminated:
@@ -146,7 +159,14 @@ export default function useSip() {
       setSipState('Invalid target URI or UserAgent not initialized');
       return;
     }
-    const inviter = new Inviter(userAgentState, targetURI); // 創建 Inviter 實例
+    const inviter = new Inviter(userAgentState, targetURI, {
+      sessionDescriptionHandlerOptions: {
+        constraints: {
+          audio: true,
+          video: true, // 啟用視訊
+        },
+      },
+    }); // 創建 Inviter 實例
     inviter.stateChange.addListener((state) => handleSessionStateChange(state, inviter)); // 添加狀態變更監聽器
     try {
       await inviter.invite(); // 發起呼叫

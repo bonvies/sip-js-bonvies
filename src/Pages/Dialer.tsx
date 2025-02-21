@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@mui/material';
 import useSip from '../hooks/useSip';
 import { useCallStateStore } from '../stores/CallState';
@@ -56,6 +56,19 @@ export default function Dialer() {
         return callNumber ? callNumber : '請輸入撥打號碼';
     }
   }, [callNumber, callState]);
+
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+      .then(stream => {
+        // 將本地視訊流設置到視訊元素中
+        const localVideoElement = document.getElementById('localVideo') as HTMLVideoElement;
+        if (localVideoElement) {
+          localVideoElement.srcObject = stream;
+          localVideoElement.play().catch(error => console.error('Failed to play local video:', error));
+        }
+      })
+      .catch(error => console.error('Failed to get local media:', error));
+  }, []);
 
   return (
     <Container maxWidth="xs" sx={{ mt: 4 }}>
@@ -146,6 +159,8 @@ export default function Dialer() {
       >
         Call 智能客服中心
       </Button>
+      <video id="localVideo" width='100%' autoPlay playsInline muted></video>
+      <video id="remoteVideo" width='100%' autoPlay playsInline></video>
       <audio ref={dtmfAudioRef} src={dtnf} />
       <audio ref={ringbackAudioRef} src={ringbacktone} />
     </Container>
