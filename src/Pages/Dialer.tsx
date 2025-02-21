@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@mui/material';
-import useSip from '../hooks/useSip';
+import SipCodeContext  from '../providers/SipCodeProvider';
 import { useCallStateStore } from '../stores/CallState';
 
 import dtnf from '../assets/dtmf.mp3';
@@ -10,7 +10,18 @@ import Video from '../components/Video';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
-  const { remoteAudioRef, localVideoRef, remoteVideoRef, dtmfAudioRef, ringbackAudioRef, initUserAgent, startUserAgent, stopUserAgent, makeCall, sendDtmf, hangUpCall, playLocalVideo } = useSip();
+  const sipContext = useContext(SipCodeContext);
+  const { 
+    remoteAudioRef,
+    dtmfAudioRef,
+    ringbackAudioRef,
+    initUserAgent,
+    startUserAgent,
+    stopUserAgent,
+    makeCall,
+    sendDtmf,
+    hangUpCall,
+  } = sipContext || {};
   const { callState } = useCallStateStore();
 
   const handleDialButtonClick = (value: string) => {
@@ -47,7 +58,7 @@ export default function Dialer() {
   };
 
   const handleVideoCall = () => {
-    setPageCode(3);
+
   };
 
   const showCallState = useMemo(() => {

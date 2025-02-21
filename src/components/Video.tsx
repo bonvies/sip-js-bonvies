@@ -1,9 +1,14 @@
-import { useEffect } from 'react';
-import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@mui/material';
-import useSip from '../hooks/useSip';
+import { useContext, useEffect } from 'react';
+import { Container } from '@mui/material';
+import SipCodeContext from '../providers/SipCodeProvider';
 
 export default function Video() {
-  const { remoteAudioRef, localVideoRef, remoteVideoRef, dtmfAudioRef, ringbackAudioRef, startUserAgent, makeCall, sendDtmf, hangUpCall, playLocalVideo } = useSip();
+  const sipContext = useContext(SipCodeContext);
+  const { 
+    localVideoRef,
+    remoteVideoRef,
+    playLocalVideo 
+  } = sipContext || {};
 
   useEffect(() => {
     playLocalVideo();

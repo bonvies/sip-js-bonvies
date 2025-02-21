@@ -8,7 +8,9 @@ import './normalize.css';
 import './index.css';
 
 import App from "./App";
-
+import { SipCodeProvider } from './providers/SipCodeProvider';
 createRoot(document.getElementById('root')!).render(
-  <App />,
+  <SipCodeProvider>
+    <App />
+  </SipCodeProvider>,
 )
