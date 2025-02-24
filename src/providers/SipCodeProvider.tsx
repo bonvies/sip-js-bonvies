@@ -14,11 +14,13 @@ type SipCodeContextType = {
   playRemoteAudio: (remoteStream: MediaStream) => void; // 播放遠端音頻
   playRemoteVideo: (remoteStream: MediaStream) => void; // 播放遠端視頻
   playLocalVideo: () => Promise<void>; // 播放本地視頻
+  toggleVideo: () => Promise<void>; // 切換視頻
   remoteAudioRef: React.RefObject<HTMLAudioElement | null>; // 遠端音頻引用
   localVideoRef: React.RefObject<HTMLVideoElement | null>; // 本地視頻引用
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>; // 遠端視頻引用
   dtmfAudioRef: React.RefObject<HTMLAudioElement | null>; // DTMF 音頻引用
   ringbackAudioRef: React.RefObject<HTMLAudioElement | null>; // 回鈴音音頻引用
+  isVideoEnabled: boolean; // 視頻是否啟用
 }
 
 // 創建一個 Context，提供預設值
@@ -32,11 +34,13 @@ const SipCodeContext = createContext<SipCodeContextType>({
   playRemoteAudio: () => {},
   playRemoteVideo: () => {},
   playLocalVideo: async () => {},
+  toggleVideo: async () => {},
   remoteAudioRef: { current: null as HTMLAudioElement | null },
   localVideoRef: { current: null as HTMLVideoElement | null }, 
   remoteVideoRef: { current: null as HTMLVideoElement | null },
   dtmfAudioRef: { current: null as HTMLAudioElement | null },
   ringbackAudioRef: { current: null as HTMLAudioElement | null },
+  isVideoEnabled: true,
 });
 
 // 創建一個 Provider 組件，提供 SIP 功能和狀態
@@ -46,6 +50,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
   const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true); // 視頻是否啟用
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
   const localVideoRef = useRef<HTMLVideoElement>(null); // 本地視頻引用
@@ -280,6 +285,21 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [currentInviter, playDtmfSound]);
 
+  // 切換視訊模式
+  const toggleVideo = useCallback(async () => {
+    if (currentInviter && currentInviter.sessionDescriptionHandler) {
+      const peerConnection = (currentInviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+      const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
+      
+      if (localStream) {
+        setIsVideoEnabled((prev)=>{
+          localStream.enabled = !prev;
+          return !prev;
+        });
+      }
+    }
+  }, [currentInviter]);
+
   // 提供 SIP 功能和狀態給子組件
   return (
     <SipCodeContext.Provider value={{
@@ -292,11 +312,13 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       playRemoteAudio,
       playRemoteVideo,
       playLocalVideo,
+      toggleVideo,
       remoteAudioRef,
       localVideoRef,
       remoteVideoRef,
       dtmfAudioRef,
       ringbackAudioRef,
+      isVideoEnabled
     }}>
       {children}
     </SipCodeContext.Provider>

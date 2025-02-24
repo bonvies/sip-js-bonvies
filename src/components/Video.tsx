@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { Container } from '@mui/material';
 import SipCodeContext from '../providers/SipCodeProvider';
 
@@ -7,13 +7,7 @@ export default function Video() {
   const { 
     localVideoRef,
     remoteVideoRef,
-    playLocalVideo 
   } = sipContext || {};
-
-  useEffect(() => {
-    playLocalVideo();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>

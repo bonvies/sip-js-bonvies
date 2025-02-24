@@ -10,17 +10,21 @@ import Video from '../components/Video';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
+  
   const sipContext = useContext(SipCodeContext);
   const { 
     remoteAudioRef,
     dtmfAudioRef,
     ringbackAudioRef,
+    isVideoEnabled,
     initUserAgent,
     startUserAgent,
     stopUserAgent,
     makeCall,
     sendDtmf,
     hangUpCall,
+    toggleVideo,
+    playLocalVideo 
   } = sipContext || {};
   const { callState } = useCallStateStore();
 
@@ -58,7 +62,8 @@ export default function Dialer() {
   };
 
   const handleVideoCall = () => {
-
+    playLocalVideo();
+    toggleVideo()
   };
 
   const showCallState = useMemo(() => {
@@ -149,7 +154,7 @@ export default function Dialer() {
             onClick={handleVideoCall}
             sx={{ my: 2 }}
           >
-            Video Call
+            {isVideoEnabled ? '關閉視訊' : '開啟視訊'}
           </Button>
         </Stack>
         }
