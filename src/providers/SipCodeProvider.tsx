@@ -49,7 +49,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore(); // 使用 Settings store
 
   const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
-  const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
+  const [currentSession, setCurrentSession] = useState<Inviter | null>(); // 當前的 Inviter
   const [isVideoEnabled, setIsVideoEnabled] = useState(true); // 視頻是否啟用
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
@@ -204,7 +204,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         setTimeout(() => {
           setCallState(null);
         }, 1500);
-        setCurrentInviter(null);
+        setCurrentSession(null);
         break;
       default:
         break;
@@ -230,7 +230,8 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     inviter.stateChange.addListener((state) => handleSessionStateChange(state, inviter));
     try {
       await inviter.invite();
-      setCurrentInviter(inviter);
+      console.log(inviter);
+      setCurrentSession(inviter);
     } catch (error) {
       console.error('Failed to make call:', error);
       setSipError('Failed to make call');
@@ -250,10 +251,10 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // 結束通話
   const hangUpCall = useCallback(async () => {
-    if (currentInviter) {
-      if (currentInviter.state === SessionState.Establishing) {
+    if (currentSession) {
+      if (currentSession.state === SessionState.Establishing) {
         try {
-          await currentInviter.cancel();
+          await currentSession.cancel();
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
@@ -261,34 +262,34 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         }
       } else {
         try {
-          await currentInviter.bye();
+          await currentSession.bye();
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
           setSipError('Failed to end call');
         }
       }
-      setCurrentInviter(null);
+      setCurrentSession(null);
     } else {
       setSipState('No active call to hang up or cancel');
     }
-  }, [currentInviter, setSipError, setSipState]);
+  }, [currentSession, setSipError, setSipState]);
 
   // 發送 DTMF 音
   const sendDtmf = useCallback((digit: string) => {
     playDtmfSound();
-    if (currentInviter && currentInviter.state === SessionState.Established) {
-      const sessionDescriptionHandler = currentInviter.sessionDescriptionHandler;
+    if (currentSession && currentSession.state === SessionState.Established) {
+      const sessionDescriptionHandler = currentSession.sessionDescriptionHandler;
       if (sessionDescriptionHandler) {
         sessionDescriptionHandler.sendDtmf(digit);
       }
     }
-  }, [currentInviter, playDtmfSound]);
+  }, [currentSession, playDtmfSound]);
 
   // 切換視訊模式
   const toggleVideo = useCallback(async () => {
-    if (currentInviter && currentInviter.sessionDescriptionHandler) {
-      const peerConnection = (currentInviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+    if (currentSession && currentSession.sessionDescriptionHandler) {
+      const peerConnection = (currentSession.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
       const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
       
       if (localStream) {
@@ -298,7 +299,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         });
       }
     }
-  }, [currentInviter]);
+  }, [currentSession]);
 
   // 提供 SIP 功能和狀態給子組件
   return (
