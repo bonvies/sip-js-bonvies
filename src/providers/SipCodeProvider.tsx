@@ -49,7 +49,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore(); // 使用 Settings store
 
   const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
-  const [currentSession, setCurrentSession] = useState<Inviter | null>(); // 當前的 Inviter
+  const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
   const [isVideoEnabled, setIsVideoEnabled] = useState(true); // 視頻是否啟用
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
@@ -170,49 +170,14 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, []);
 
-  // 處理會話狀態變更
-  const handleSessionStateChange = useCallback((state: SessionState, inviter: Inviter) => {
-    switch (state) {
-      case SessionState.Establishing: {
-        setCallState("Establishing");
-        playRingbackTone();
-        break;
-      }
-      case SessionState.Established: {
-        setCallState("Established");
-        stopRingbackTone();
-      
-        if (inviter) {
-          const remoteStream = new MediaStream();
-          if (inviter.sessionDescriptionHandler) {
-            const peerConnection = (inviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
-            peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
-              if (receiver.track) {
-                remoteStream.addTrack(receiver.track);
-              }
-            });
-      
-            playRemoteAudio(remoteStream);
-            playRemoteVideo(remoteStream);
-          }
-        }
-        break;
-      }
-      case SessionState.Terminated:
-        setCallState("Terminated");
-        stopRingbackTone();
-        setTimeout(() => {
-          setCallState(null);
-        }, 1500);
-        setCurrentSession(null);
-        break;
-      default:
-        break;
+  // 發起通話
+  const makeCall = useCallback(async (phoneNumber: string) => {
+    if (!userAgentState) {
+      console.error('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
+      return;
     }
-  }, [playRemoteAudio, playRemoteVideo, playRingbackTone, setCallState, stopRingbackTone]);
 
-  // 初始化 Inviter
-  const initInviter = useCallback(async (phoneNumber: string) => {
     const targetURI = UserAgent.makeURI(`sip:${phoneNumber}@${domainList[0]}`);
     if (!targetURI || !userAgentState) {
       console.error('Invalid target URI or UserAgent not initialized');
@@ -227,69 +192,100 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         },
       },
     });
-    inviter.stateChange.addListener((state) => handleSessionStateChange(state, inviter));
+    
+    // 處理會話狀態變更
+    inviter.stateChange.addListener((state) => {
+      switch (state) {
+        case SessionState.Establishing: {
+          setCallState("Establishing");
+          playRingbackTone();
+          break;
+        }
+        case SessionState.Established: {
+          setCallState("Established");
+          stopRingbackTone();
+        
+          if (inviter) {
+            const remoteStream = new MediaStream();
+            if (inviter.sessionDescriptionHandler) {
+              const peerConnection = (inviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+              peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+                if (receiver.track) {
+                  remoteStream.addTrack(receiver.track);
+                }
+              });
+        
+              playRemoteAudio(remoteStream);
+              playRemoteVideo(remoteStream);
+            }
+          }
+          break;
+        }
+        case SessionState.Terminated:
+          setCallState("Terminated");
+          stopRingbackTone();
+          setTimeout(() => {
+            setCallState(null);
+          }, 1500);
+          setCurrentInviter(null);
+          break;
+        default:
+          break;
+      }
+    });
     try {
       await inviter.invite();
       console.log(inviter);
-      setCurrentSession(inviter);
+      setCurrentInviter(inviter);
     } catch (error) {
       console.error('Failed to make call:', error);
       setSipError('Failed to make call');
     }
-  }, [domainList, userAgentState, setSipState, handleSessionStateChange, setSipError]);
-
-  // 發起通話
-  const makeCall = useCallback((phoneNumber: string) => {
-    if (!userAgentState) {
-      console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
-      return;
-    }
-
-    initInviter(phoneNumber);
-  }, [userAgentState, initInviter, setSipError]);
+  }, [userAgentState, domainList, setSipError, setSipState, setCallState, playRingbackTone, playRemoteAudio, playRemoteVideo, stopRingbackTone]);
 
   // 結束通話
   const hangUpCall = useCallback(async () => {
-    if (currentSession) {
-      if (currentSession.state === SessionState.Establishing) {
-        try {
-          await currentSession.cancel();
-          setSipState("Call canceled");
-        } catch (error) {
-          console.error('Failed to cancel call:', error);
-          setSipError('Failed to cancel call');
-        }
-      } else {
-        try {
-          await currentSession.bye();
-          setSipState("Call ended");
-        } catch (error) {
-          console.error('Failed to end call:', error);
-          setSipError('Failed to end call');
-        }
-      }
-      setCurrentSession(null);
-    } else {
+    if (!currentInviter) {
+      console.error('No active call to hang up or cancel');
       setSipState('No active call to hang up or cancel');
+      return;
     }
-  }, [currentSession, setSipError, setSipState]);
+
+    if (currentInviter.state === SessionState.Establishing) {
+      try {
+        await currentInviter.cancel();
+        setSipState("Call canceled");
+      } catch (error) {
+        console.error('Failed to cancel call:', error);
+        setSipError('Failed to cancel call');
+      }
+    } else {
+      try {
+        await currentInviter.bye();
+        setSipState("Call ended");
+      } catch (error) {
+        console.error('Failed to end call:', error);
+        setSipError('Failed to end call');
+      }
+    }
+    setCurrentInviter(null);
+  }, [currentInviter, setSipError, setSipState]);
 
   // 發送 DTMF 音
   const sendDtmf = useCallback((digit: string) => {
     playDtmfSound();
-    if (currentSession && currentSession.state === SessionState.Established) {
-      const sessionDescriptionHandler = currentSession.sessionDescriptionHandler;
+    if (currentInviter && currentInviter.state === SessionState.Established) {
+      const sessionDescriptionHandler = currentInviter.sessionDescriptionHandler;
       if (sessionDescriptionHandler) {
         sessionDescriptionHandler.sendDtmf(digit);
       }
     }
-  }, [currentSession, playDtmfSound]);
+  }, [currentInviter, playDtmfSound]);
 
   // 切換視訊模式
   const toggleVideo = useCallback(async () => {
-    if (currentSession && currentSession.sessionDescriptionHandler) {
-      const peerConnection = (currentSession.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+    if (currentInviter && currentInviter.sessionDescriptionHandler) {
+      const peerConnection = (currentInviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
       const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
       
       if (localStream) {
@@ -299,7 +295,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         });
       }
     }
-  }, [currentSession]);
+  }, [currentInviter]);
 
   // 提供 SIP 功能和狀態給子組件
   return (
