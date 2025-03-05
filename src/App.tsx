@@ -1,11 +1,21 @@
 import { Container, Tabs, Tab } from '@mui/material';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Dialer from "./Pages/Dialer";
 import Calls from "./Pages/Calls";
 import Settings from "./Pages/Settings";
+import dtnf from './assets/dtmf.mp3';
+import ringbacktone from './assets/ringbacktone.mp3';
+import SipCodeContext from './providers/SipCodeProvider';
 
 export default function App() {
   const [tabValue, setTabValue] = useState(0);
+
+  const sipContext = useContext(SipCodeContext);
+  const { 
+    remoteAudioRef,
+    dtmfAudioRef,
+    ringbackAudioRef,
+  } = sipContext || {};
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -25,6 +35,9 @@ export default function App() {
       {tabValue === 0 && <Dialer />}
       {tabValue === 1 && <Calls />}
       {tabValue === 2 && <Settings />}
+      <audio ref={remoteAudioRef} autoPlay />
+      <audio ref={dtmfAudioRef} src={dtnf} />
+      <audio ref={ringbackAudioRef} src={ringbacktone} />
     </Container>
   );
 }

@@ -3,28 +3,20 @@ import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@m
 import SipCodeContext  from '../providers/SipCodeProvider';
 import { useCallStateStore } from '../stores/CallState';
 
-import dtnf from '../assets/dtmf.mp3';
-import ringbacktone from '../assets/ringbacktone.mp3';
-
 import Video from '../components/Video';
 
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
+  const [showVideo, setShowVideo] = useState(false);
   
   const sipContext = useContext(SipCodeContext);
   const { 
-    remoteAudioRef,
-    dtmfAudioRef,
-    ringbackAudioRef,
-    isVideoEnabled,
     initUserAgent,
     startUserAgent,
     stopUserAgent,
     makeCall,
     sendDtmf,
-    hangUpCall,
-    toggleVideo,
-    playLocalVideo 
+    hangUpCall
   } = sipContext || {};
   const { callState } = useCallStateStore();
 
@@ -61,10 +53,9 @@ export default function Dialer() {
     setCallNumber('');
   };
 
-  const handleVideoCall = () => {
-    playLocalVideo();
-    toggleVideo()
-  };
+  const handleToggleShowVideo = () => {
+    setShowVideo((prev) => !prev);
+  }
 
   const showCallState = useMemo(() => {
     switch (callState) {
@@ -90,109 +81,109 @@ export default function Dialer() {
 
   return (
     <>
-      <Container maxWidth="xs" sx={{ mt: 4 }}>
-        <audio ref={remoteAudioRef} autoPlay />
-        <Typography variant="h4" align="center" sx={{ mb: 2 }}>
-          {showCallState}
-        </Typography>
-        <Grid container spacing={1}>
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((item) => (
-            <Grid key={item} size={4}>
+      {!showVideo
+        ? (
+        <Container maxWidth="xs" sx={{ mt: 4 }}>
+          <Typography variant="h4" align="center" sx={{ mb: 2 }}>
+            {showCallState}
+          </Typography>
+          <Grid container spacing={1}>
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((item) => (
+              <Grid key={item} size={4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => handleDialButtonClick(item)}
+                  sx={{ height: 60 }}
+                >
+                  {item}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+          {!callState ? 
+            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
               <Button
                 fullWidth
-                variant="outlined"
-                onClick={() => handleDialButtonClick(item)}
-                sx={{ height: 60 }}
+                variant="contained"
+                color="primary"
+                onClick={handleClear}
               >
-                {item}
+                Clear
               </Button>
-            </Grid>
-          ))}
-        </Grid>
-        {!callState ? 
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={handleCall}
+              >
+                Call
+              </Button>
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={handleFix}
+              >
+                Fix
+              </Button>
+            </Stack>
+          :
           <Stack direction="row" spacing={1} sx={{ my: 2 }}>
             <Button
               fullWidth
               variant="contained"
               color="primary"
-              onClick={handleClear}
+              onClick={handleHangUpCall}
+              sx={{ my: 2 }}
             >
-              Clear
+              Hang Up
             </Button>
             <Button
               fullWidth
               variant="contained"
               color="primary"
-              onClick={handleCall}
+              onClick={handleToggleShowVideo}
+              sx={{ my: 2 }}
             >
-              Call
-            </Button>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleFix}
-            >
-              Fix
+              Video
             </Button>
           </Stack>
-        :
-        <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+          }
+          <Divider>指定撥打對象</Divider>
           <Button
             fullWidth
             variant="contained"
             color="primary"
-            onClick={handleHangUpCall}
-            sx={{ my: 2 }}
+            onClick={(e) => handleCall(e, '0915970815')}
+            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+            sx={{ mt: 2 }}
           >
-            Hang Up
+            Call Leo
           </Button>
           <Button
             fullWidth
             variant="contained"
             color="primary"
-            onClick={handleVideoCall}
-            sx={{ my: 2 }}
+            onClick={(e) => handleCall(e, '0902213273')}
+            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+            sx={{ mt: 2 }}
           >
-            {isVideoEnabled ? '關閉視訊' : '開啟視訊'}
+            Call Aya
           </Button>
-        </Stack>
-        }
-        <Divider>指定撥打對象</Divider>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={(e) => handleCall(e, '0915970815')}
-          disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-          sx={{ mt: 2 }}
-        >
-          Call Leo
-        </Button>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={(e) => handleCall(e, '0902213273')}
-          disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-          sx={{ mt: 2 }}
-        >
-          Call Aya
-        </Button>
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={(e) => handleCall(e, '77505134')}
-          disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-          sx={{ mt: 2 }}
-        >
-          Call 智能客服中心
-        </Button>
-        <audio ref={dtmfAudioRef} src={dtnf} />
-        <audio ref={ringbackAudioRef} src={ringbacktone} />
-      </Container>
-      <Video />
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={(e) => handleCall(e, '77505134')}
+            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+            sx={{ mt: 2 }}
+          >
+            Call 智能客服中心
+          </Button>
+        </Container>
+        ): <Video onToggleShowVideo={handleToggleShowVideo} />
+      }
     </>
 
   );

@@ -11,16 +11,18 @@ type SipCodeContextType = {
   makeCall: (phoneNumber: string) => void; // 發起通話
   hangUpCall: () => Promise<void>; // 結束通話
   sendDtmf: (digit: string) => void; // 發送 DTMF 音
-  playRemoteAudio: (remoteStream: MediaStream) => void; // 播放遠端音頻
-  playRemoteVideo: (remoteStream: MediaStream) => void; // 播放遠端視頻
+  playRemoteAudio: () => void; // 播放遠端音頻
+  stopRemoteAudio: () => void; // 停止遠端音頻
+  playRemoteVideo: () => void; // 播放遠端視頻
+  stopRemoteVideo: () => void; // 停止遠端視頻
   playLocalVideo: () => Promise<void>; // 播放本地視頻
-  toggleVideo: () => Promise<void>; // 切換視頻
+  stopLocalVideo: () => void; // 停止本地視頻
+  toggleVideo: (streamSwitch: boolean) => Promise<void>; // 切換視頻
   remoteAudioRef: React.RefObject<HTMLAudioElement | null>; // 遠端音頻引用
   localVideoRef: React.RefObject<HTMLVideoElement | null>; // 本地視頻引用
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>; // 遠端視頻引用
   dtmfAudioRef: React.RefObject<HTMLAudioElement | null>; // DTMF 音頻引用
   ringbackAudioRef: React.RefObject<HTMLAudioElement | null>; // 回鈴音音頻引用
-  isVideoEnabled: boolean; // 視頻是否啟用
 }
 
 // 創建一個 Context，提供預設值
@@ -32,15 +34,17 @@ const SipCodeContext = createContext<SipCodeContextType>({
   hangUpCall: async () => {},
   sendDtmf: () => {},
   playRemoteAudio: () => {},
+  stopRemoteAudio: () => {},
   playRemoteVideo: () => {},
+  stopRemoteVideo: () => {},
   playLocalVideo: async () => {},
+  stopLocalVideo: () => {},
   toggleVideo: async () => {},
   remoteAudioRef: { current: null as HTMLAudioElement | null },
   localVideoRef: { current: null as HTMLVideoElement | null }, 
   remoteVideoRef: { current: null as HTMLVideoElement | null },
   dtmfAudioRef: { current: null as HTMLAudioElement | null },
   ringbackAudioRef: { current: null as HTMLAudioElement | null },
-  isVideoEnabled: true,
 });
 
 // 創建一個 Provider 組件，提供 SIP 功能和狀態
@@ -50,7 +54,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
   const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true); // 視頻是否啟用
+  const [currentRemoteStream, setCurrentRemoteStream] = useState<MediaStream>(); // 遠端媒體流
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
   const localVideoRef = useRef<HTMLVideoElement>(null); // 本地視頻引用
@@ -141,18 +145,46 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   // 播放遠端音頻
-  const playRemoteAudio = useCallback((remoteStream: MediaStream) => {
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.srcObject = remoteStream;
+  const playRemoteAudio = useCallback(() => {
+    if (remoteAudioRef.current && currentRemoteStream) {
+      remoteAudioRef.current.srcObject = currentRemoteStream;
       remoteAudioRef.current.play().catch(error => console.error('Failed to play audio:', error));
+    }
+  }, [currentRemoteStream]);
+
+  // 停止遠端音頻
+  const stopRemoteAudio = useCallback(() => {
+    const remoteAudioElement = remoteAudioRef.current as HTMLAudioElement;
+    if (remoteAudioElement && remoteAudioElement.srcObject) {
+      const stream = remoteAudioElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => {
+        if (track.kind === 'Audio') {
+          track.stop();
+        }
+      });
+      remoteAudioElement.srcObject = null;
     }
   }, []);
 
   // 播放遠端視頻
-  const playRemoteVideo = useCallback((remoteStream: MediaStream) => {
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = remoteStream;
+  const playRemoteVideo = useCallback(() => {
+    if (remoteVideoRef.current && currentRemoteStream) {
+      remoteVideoRef.current.srcObject = currentRemoteStream;
       remoteVideoRef.current?.play().catch(error => console.error('Failed to play video:', error));
+    }
+  }, [currentRemoteStream]);
+
+  // 停止遠端視頻
+  const stopRemoteVideo = useCallback(() => {
+    const remoteVideoElement = remoteVideoRef.current as HTMLVideoElement;
+    if (remoteVideoElement && remoteVideoElement.srcObject) {
+      const stream = remoteVideoElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => {
+        if (track.kind === 'video') {
+          track.stop();
+        }
+      });
+      remoteVideoElement.srcObject = null;
     }
   }, []);
 
@@ -169,6 +201,20 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to get local media:', error);
     }
   }, []);
+
+  // 停止本地視頻
+const stopLocalVideo = useCallback(() => {
+  const localVideoElement = localVideoRef.current as HTMLVideoElement;
+  if (localVideoElement && localVideoElement.srcObject) {
+    const stream = localVideoElement.srcObject as MediaStream;
+    stream.getTracks().forEach(track => {
+      if (track.kind === 'video') {
+        track.stop();
+      }
+    });
+    localVideoElement.srcObject = null;
+  }
+}, []);
 
   // 發起通話
   const makeCall = useCallback(async (phoneNumber: string) => {
@@ -214,9 +260,33 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
                   remoteStream.addTrack(receiver.track);
                 }
               });
-        
-              playRemoteAudio(remoteStream);
-              playRemoteVideo(remoteStream);
+              setCurrentRemoteStream(remoteStream);
+
+              // 先阻斷本地視訊流傳送 直到進到 video 組件再打開
+              const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
+              if (!localStream) {
+                console.error('In Established, No local video stream found');
+                setSipError('In Established, No local video stream found');
+                return;
+              }
+              localStream.enabled = false;
+              
+
+              // 播放遠端音頻
+              if (!remoteAudioRef.current) {
+                console.error('No remote audio element found');
+                return;
+              }
+              remoteAudioRef.current.srcObject = remoteStream;
+              remoteAudioRef.current.play().catch(error => console.error('Failed to play audio:', error));
+
+              // 播放遠端視頻
+              if (!remoteVideoRef.current) {
+                console.error('No remote video element found');
+                return;
+              }
+              remoteVideoRef.current.srcObject = remoteStream;
+              remoteVideoRef.current?.play().catch(error => console.error('Failed to play video:', error));
             }
           }
           break;
@@ -224,6 +294,8 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         case SessionState.Terminated:
           setCallState("Terminated");
           stopRingbackTone();
+          stopRemoteAudio();
+          stopRemoteVideo();
           setTimeout(() => {
             setCallState(null);
           }, 1500);
@@ -241,7 +313,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to make call:', error);
       setSipError('Failed to make call');
     }
-  }, [userAgentState, domainList, setSipError, setSipState, setCallState, playRingbackTone, playRemoteAudio, playRemoteVideo, stopRingbackTone]);
+  }, [userAgentState, domainList, setSipError, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone]);
 
   // 結束通話
   const hangUpCall = useCallback(async () => {
@@ -282,20 +354,25 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [currentInviter, playDtmfSound]);
 
-  // 切換視訊模式
-  const toggleVideo = useCallback(async () => {
+  // 切換視訊是否傳送給對方
+  const toggleVideo = useCallback(async (streamSwitch: boolean) => {
     if (currentInviter && currentInviter.sessionDescriptionHandler) {
       const peerConnection = (currentInviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
       const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
       
-      if (localStream) {
-        setIsVideoEnabled((prev)=>{
-          localStream.enabled = !prev;
-          return !prev;
-        });
+      if (!localStream) {
+        console.error('No local video stream found');
+        setSipError('No local video stream found');
+        return;
+      }
+
+      if (streamSwitch) {
+        localStream.enabled = true;
+      } else {
+        localStream.enabled = false;
       }
     }
-  }, [currentInviter]);
+  }, [currentInviter, setSipError]);
 
   // 提供 SIP 功能和狀態給子組件
   return (
@@ -307,15 +384,17 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       hangUpCall,
       sendDtmf,
       playRemoteAudio,
+      stopRemoteAudio,
       playRemoteVideo,
+      stopRemoteVideo,
       playLocalVideo,
+      stopLocalVideo,
       toggleVideo,
       remoteAudioRef,
       localVideoRef,
       remoteVideoRef,
       dtmfAudioRef,
       ringbackAudioRef,
-      isVideoEnabled
     }}>
       {children}
     </SipCodeContext.Provider>
