@@ -12,13 +12,13 @@ export default function Dialer() {
   const sipContext = useContext(SipCodeContext);
   const { 
     initUserAgent,
-    startUserAgent,
     stopUserAgent,
     makeCall,
     sendDtmf,
+    answerCall,
     hangUpCall
   } = sipContext || {};
-  const { callState } = useCallStateStore();
+  const { callType, callState, setCallType } = useCallStateStore();
 
   const handleDialButtonClick = (value: string) => {
     if (!callState || callState === 'Established') {
@@ -38,14 +38,12 @@ export default function Dialer() {
 
   const handleCall = (_event: React.MouseEvent<HTMLButtonElement>, phoneNumber: string | null = null) => {
     if (phoneNumber) {
-      startUserAgent();
       makeCall(phoneNumber);
     }
     if (callNumber) {
-      startUserAgent();
       makeCall(callNumber);
     }
-    setCallNumber('');
+    setCallType('Inviter');
   };
 
   const handleHangUpCall = () => {
@@ -53,22 +51,41 @@ export default function Dialer() {
     setCallNumber('');
   };
 
+  const handleAnswerCall = () => {
+    answerCall();
+  };
+
   const handleToggleShowVideo = () => {
     setShowVideo((prev) => !prev);
   }
 
   const showCallState = useMemo(() => {
-    switch (callState) {
-      case 'Establishing':
-        return '撥號中';
-      case 'Established':
-        return '通話中';
-      case 'Terminated':
-        return '通話結束';
-      default:
-        return callNumber ? callNumber : '請輸入撥打號碼';
+    if(callType === 'Inviter') {
+      switch (callState) {
+        case 'Establishing':
+          return '撥號中';
+        case 'Established':
+          return '通話中';
+        case 'Terminated':
+          return '通話結束';
+        default:
+          return '';
+      }
     }
-  }, [callNumber, callState]);
+
+    if(callType === 'Invitation') {
+      switch (callState) {
+        case 'Establishing':
+          return '來電中';
+        case 'Established':
+          return '通話中';
+        case 'Terminated':
+          return '通話結束';
+        default:
+          return '';
+      }
+    }
+  }, [callState, callType]);
 
   // 初始化 UserAgent 並在組件卸載時停止 UserAgent
   useEffect(() => {
@@ -85,6 +102,9 @@ export default function Dialer() {
         ? (
         <Container maxWidth="xs" sx={{ mt: 4 }}>
           <Typography variant="h4" align="center" sx={{ mb: 2 }}>
+            {callNumber ? callNumber : '請輸入撥打號碼'}
+          </Typography>
+          <Typography variant="h6" align="center" sx={{ mb: 2 }}>
             {showCallState}
           </Typography>
           <Grid container spacing={1}>
@@ -181,9 +201,19 @@ export default function Dialer() {
           >
             Call 智能客服中心
           </Button>
+          <Button
+              fullWidth
+              variant="contained"
+              color="secondary"
+              onClick={handleAnswerCall}
+              sx={{ my: 2 }}
+            >
+              Answer Call
+            </Button>
         </Container>
         ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
       }
+      
     </>
 
   );

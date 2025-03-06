@@ -5,6 +5,7 @@ import Calls from "./Pages/Calls";
 import Settings from "./Pages/Settings";
 import dtnf from './assets/dtmf.mp3';
 import ringbacktone from './assets/ringbacktone.mp3';
+import ringtone from './assets/ringtone.mp3';
 import SipCodeContext from './providers/SipCodeProvider';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
     remoteAudioRef,
     dtmfAudioRef,
     ringbackAudioRef,
+    ringtoneAudioRef
   } = sipContext || {};
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -41,6 +43,7 @@ export default function App() {
         <audio ref={remoteAudioRef} autoPlay />
         <audio ref={dtmfAudioRef} src={dtnf} />
         <audio ref={ringbackAudioRef} src={ringbacktone} />
+        <audio ref={ringtoneAudioRef} src={ringtone}/>
       </Container>
     </Container>
 

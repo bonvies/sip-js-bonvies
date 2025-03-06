@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useRef, ReactNode } from 'react';
-import { UserAgent, Inviter, SessionState } from 'sip.js';
+import { UserAgent, Inviter, SessionState, Invitation, Registerer, UserAgentDelegate } from 'sip.js';
 import { useSettingsStore } from '../stores/SipSetting';
 import { useCallStateStore } from '../stores/CallState';
 
@@ -8,9 +8,12 @@ type SipCodeContextType = {
   initUserAgent: () => void; // 初始化 UserAgent
   startUserAgent: () => Promise<void>; // 啟動 UserAgent
   stopUserAgent: () => Promise<void>; // 停止 UserAgent
+  registerUserAgent: () => Promise<void>; // 註冊 UserAgent
+  unRegisterUserAgent: () => Promise<void>; // 解除註冊 UserAgent
   makeCall: (phoneNumber: string) => void; // 發起通話
   hangUpCall: () => Promise<void>; // 結束通話
   sendDtmf: (digit: string) => void; // 發送 DTMF 音
+  answerCall: () => Promise<void>; // 接聽來電
   playRemoteAudio: () => void; // 播放遠端音頻
   stopRemoteAudio: () => void; // 停止遠端音頻
   playRemoteVideo: () => void; // 播放遠端視頻
@@ -23,6 +26,7 @@ type SipCodeContextType = {
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>; // 遠端視頻引用
   dtmfAudioRef: React.RefObject<HTMLAudioElement | null>; // DTMF 音頻引用
   ringbackAudioRef: React.RefObject<HTMLAudioElement | null>; // 回鈴音音頻引用
+  ringtoneAudioRef: React.RefObject<HTMLAudioElement | null>; // 鈴聲音頻引用
 }
 
 // 創建一個 Context，提供預設值
@@ -30,9 +34,12 @@ const SipCodeContext = createContext<SipCodeContextType>({
   initUserAgent: () => {},
   startUserAgent: async () => {},
   stopUserAgent: async () => {},
+  registerUserAgent: async () => {},
+  unRegisterUserAgent: async () => {},
   makeCall: () => {},
   hangUpCall: async () => {},
   sendDtmf: () => {},
+  answerCall: async () => {},
   playRemoteAudio: () => {},
   stopRemoteAudio: () => {},
   playRemoteVideo: () => {},
@@ -45,15 +52,18 @@ const SipCodeContext = createContext<SipCodeContextType>({
   remoteVideoRef: { current: null as HTMLVideoElement | null },
   dtmfAudioRef: { current: null as HTMLAudioElement | null },
   ringbackAudioRef: { current: null as HTMLAudioElement | null },
+  ringtoneAudioRef: { current: null as HTMLAudioElement | null }
 });
 
 // 創建一個 Provider 組件，提供 SIP 功能和狀態
 export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { setSipState, setCallState, setSipError } = useCallStateStore(); // 使用 CallState store
+  const { setSipState, setCallType, setCallState, setSipError } = useCallStateStore(); // 使用 CallState store
   const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore(); // 使用 Settings store
 
   const [userAgentState, setUserAgentState] = useState<UserAgent>(); // UserAgent 狀態
+  const [currentRegisterer, setCurrentRegisterer] = useState<Registerer | null>(); // 當前的 Registerer
   const [currentInviter, setCurrentInviter] = useState<Inviter | null>(); // 當前的 Inviter
+  const [currentInvitation, setCurrentInvitation] = useState<Invitation | null>(); // 當前的 Invitation
   const [currentRemoteStream, setCurrentRemoteStream] = useState<MediaStream>(); // 遠端媒體流
 
   const remoteAudioRef = useRef<HTMLAudioElement>(null); // 遠端音頻引用
@@ -65,84 +75,48 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const dtmfAudioRef = useRef<HTMLAudioElement>(null); // DTMF 音頻引用
   const ringbackAudioRef = useRef<HTMLAudioElement>(null); // 回鈴音音頻引用
+  const ringtoneAudioRef = useRef<HTMLAudioElement>(null); // 鈴聲音頻引用
 
-  // 初始化 UserAgent
-  const initUserAgent = useCallback(() => {
-    if (!uri || !wsServer) {
-      return null;
-    }
-    try {
-      const ua = new UserAgent({
-        uri,
-        displayName,
-        authorizationUsername: username,
-        authorizationPassword: password,
-        transportOptions: {
-          server: wsServer,
-        },
-      });
-      setUserAgentState(ua);
-    } catch (error) {
-      console.error('Failed to create UserAgent:', error);
-      return null;
-    }
-  }, [uri, wsServer, displayName, username, password]);
-
-  // 啟動 UserAgent
-  const startUserAgent = useCallback(async () => {
-    if (!userAgentState) {
-      console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
-      return;
-    }
-    try {
-      await userAgentState.start();
-      setSipState('UserAgent started');
-    } catch (error) {
-      console.error('Failed to start UserAgent:', error);
-      setSipError('Failed to start UserAgent');
-    }
-  }, [userAgentState, setSipError, setSipState]);
-
-  // 停止 UserAgent
-  const stopUserAgent = useCallback(async () => {
-    if (!userAgentState) {
-      console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
-      return;
-    }
-    try {
-      await userAgentState.stop();
-      setSipState('UserAgent stopped');
-    } catch (error) {
-      console.error('Failed to stop UserAgent:', error);
-      setSipError('Failed to stop UserAgent');
-    }
-  }, [userAgentState, setSipError, setSipState]);
-
-  // 播放 DTMF 音效
-  const playDtmfSound = useCallback(() => {
-    if (dtmfAudioRef.current) {
-      dtmfAudioRef.current.currentTime = 0;
-      dtmfAudioRef.current.play().catch(error => console.error('Failed to play DTMF sound:', error));
-    }
-  }, []);
-
-  // 播放回鈴音
-  const playRingbackTone = useCallback(() => {
-    if (ringbackAudioRef.current) {
-      ringbackAudioRef.current.loop = true;
-      ringbackAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
-    }
-  }, []);
-
-  // 停止回鈴音
-  const stopRingbackTone = useCallback(() => {
-    if (ringbackAudioRef.current) {
-      ringbackAudioRef.current.pause();
-      ringbackAudioRef.current.currentTime = 0;
-    }
-  }, []);
+    // 播放 DTMF 音效
+    const playDtmfSound = useCallback(() => {
+      if (dtmfAudioRef.current) {
+        dtmfAudioRef.current.currentTime = 0;
+        dtmfAudioRef.current.play().catch(error => console.error('Failed to play DTMF sound:', error));
+      }
+    }, []);
+  
+    // 播放回鈴音
+    const playRingbackTone = useCallback(() => {
+      if (ringbackAudioRef.current) {
+        ringbackAudioRef.current.loop = true;
+        ringbackAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
+      }
+    }, []);
+  
+    // 停止回鈴音
+    const stopRingbackTone = useCallback(() => {
+      if (ringbackAudioRef.current) {
+        ringbackAudioRef.current.pause();
+        ringbackAudioRef.current.currentTime = 0;
+      }
+    }, []);
+  
+    // 播放鈴音
+    const playRingTone = useCallback(() => {
+      if (ringtoneAudioRef.current) {
+        ringtoneAudioRef.current.loop = true;
+        ringtoneAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
+      }
+    }, []);
+  
+    // 停止鈴音
+    const stopRingkTone = useCallback(() => {
+      if (ringtoneAudioRef.current) {
+        ringtoneAudioRef.current.pause();
+        ringtoneAudioRef.current.currentTime = 0;
+      }
+    }, []);
+  
 
   // 播放遠端音頻
   const playRemoteAudio = useCallback(() => {
@@ -203,18 +177,228 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   // 停止本地視頻
-const stopLocalVideo = useCallback(() => {
-  const localVideoElement = localVideoRef.current as HTMLVideoElement;
-  if (localVideoElement && localVideoElement.srcObject) {
-    const stream = localVideoElement.srcObject as MediaStream;
-    stream.getTracks().forEach(track => {
-      if (track.kind === 'video') {
-        track.stop();
+  const stopLocalVideo = useCallback(() => {
+    const localVideoElement = localVideoRef.current as HTMLVideoElement;
+    if (localVideoElement && localVideoElement.srcObject) {
+      const stream = localVideoElement.srcObject as MediaStream;
+      stream.getTracks().forEach(track => {
+        if (track.kind === 'video') {
+          track.stop();
+        }
+      });
+      localVideoElement.srcObject = null;
+    }
+  }, []);
+
+  // 初始化 UserAgent
+  const initUserAgent = useCallback(async () => {
+    if (!uri || !wsServer) {
+      return null;
+    }
+    
+    try {
+      // 創建 UserAgent
+      const ua = new UserAgent({
+        uri,
+        displayName,
+        authorizationUsername: username,
+        authorizationPassword: password,
+        transportOptions: {
+          server: wsServer,
+        },
+      });
+      setUserAgentState(ua);
+
+      // 啟動 UserAgent
+      try {
+        await ua.start();
+        setSipState('Start');
+      } catch (error) {
+        console.error('Failed to start:', error);
+        setSipError('Failed to start');
       }
-    });
-    localVideoElement.srcObject = null;
-  }
-}, []);
+
+      // 註冊 UserAgent
+      const registerer = new Registerer(ua);
+      try {
+        await registerer.register();
+        setSipState('Registered');
+      } catch (error) {
+        console.error('Failed to register:', error);
+        setSipError('Failed to register');
+      }
+
+      // 監聽來電事件
+      ua.delegate = {
+        onInvite: (invitation: Invitation) => {
+          console.warn('有人打來了:', invitation);
+          setSipState('Incoming call');
+          setCallType('Invitation');
+          setCurrentInvitation(invitation);
+
+          setCallState("Establishing");
+          playRingTone();
+
+          // 設置會話狀態變更的監聽器
+          invitation.stateChange.addListener((state) => {
+            switch (state) {
+              case SessionState.Establishing:
+                setCallState("Establishing");
+                break;
+              case SessionState.Established:
+                { 
+                  setCallState("Established");
+                  stopRingkTone();
+                  // 播放遠端音頻
+                  const remoteStream = new MediaStream();
+                  if (invitation.sessionDescriptionHandler) {
+                    const peerConnection = (invitation.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
+                    peerConnection.getReceivers().forEach((receiver: { track: MediaStreamTrack; }) => {
+                      if (receiver.track) {
+                        remoteStream.addTrack(receiver.track);
+                      }
+                    });
+
+                    if(!remoteAudioRef.current) {
+                      console.error('No remote audio element found');
+                      setSipError('No remote audio element found');
+                      return;
+                    }
+                    remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.play().catch(error => console.error('Failed to play audio:', error));
+                    setCurrentRemoteStream(remoteStream);
+                  }
+                  break; 
+                }
+              case SessionState.Terminated:
+                setCallState("Terminated");
+                stopRingkTone();
+                setTimeout(() => {
+                  setCallType(null);
+                  setCallState(null);
+                }, 1500);
+                stopRemoteAudio();
+                break;
+              default:
+                break;
+            }
+          });
+      }};
+    } catch (error) {
+      console.error('Failed to create UserAgent:', error);
+      return null;
+    }
+  }, [uri, wsServer, displayName, username, password, setSipState, setSipError, setCallType, setCallState, stopRemoteAudio]);
+
+  // 啟動 UserAgent
+  const startUserAgent = useCallback(async () => {
+    if (!userAgentState) {
+      console.error('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
+      return;
+    }
+
+    try {
+      await userAgentState.start();
+      setSipState('UserAgent started');
+    } catch (error) {
+      console.error('Failed to start UserAgent:', error);
+      setSipError('Failed to start UserAgent');
+    }
+  }, [userAgentState, setSipError, setSipState]);
+
+  // 停止 UserAgent
+  const stopUserAgent = useCallback(async () => {
+    if (!userAgentState) {
+      console.error('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
+      return;
+    }
+    try {
+      await userAgentState.stop();
+      setSipState('UserAgent stopped');
+    } catch (error) {
+      console.error('Failed to stop UserAgent:', error);
+      setSipError('Failed to stop UserAgent');
+    }
+  }, [userAgentState, setSipError, setSipState]);
+
+  // 註冊 UserAgent
+  const registerUserAgent = useCallback(async () => {
+    if (!userAgentState) {
+      console.error('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
+      return;
+    }
+
+    try {
+      const registerer = new Registerer(userAgentState);
+      await registerer.register();
+      setCurrentRegisterer(registerer);
+      setSipState('UserAgent registered');
+    } catch (error) {
+      console.error('Failed to register UserAgent:', error);
+      setSipError('Failed to register UserAgent');
+    }
+  }, [setSipError, setSipState, userAgentState]);
+
+  // 解除註冊 UserAgent
+  const unRegisterUserAgent = useCallback(async () => {
+    if (!currentRegisterer) {
+      console.error('UserAgent not register');
+      setSipError('UserAgent not register');
+      return;
+    }
+
+    try {
+      await currentRegisterer.unregister();
+      setSipState('UserAgent unregistered');
+    } catch (error) {
+      console.error('Failed to unregistered UserAgent:', error);
+      setSipError('Failed to unregistered UserAgent');
+    }
+  }, [currentRegisterer, setSipError, setSipState]);
+
+  // 監聽 UserAgent
+  // const delegateUserAgent = <T extends keyof UserAgentDelegate>(
+  //   eventType: T,
+  //   toDoFn: UserAgentDelegate[T]
+  // ) => {
+  //   // 檢查 userAgentState 是否已經初始化
+  //   if (!userAgentState) {
+  //     console.error('UserAgent not initialized');
+  //     setSipError('UserAgent not initialized');
+  //     return;
+  //   }
+  
+  //   // 確保 userAgentState.delegate 已經被初始化
+  //   if (!userAgentState.delegate) {
+  //     userAgentState.delegate = {};
+  //   }
+
+  //   /*
+  //     當你在 `Dialer` 組件中調用 `delegateUserAgent('onInvite', ...)` 時，這會覆蓋掉 `SipCodeProvider` 中原本設置的 `onInvite` 事件處理器。
+  //     這意味著，當有來電時，`SipCodeProvider` 中的 `onInvite` 處理器不再被調用，
+  //     因此 `setCurrentInvitation(invitation)` 也不會被執行，導致 `currentInvitation` 沒有被正確設置。
+  //   */
+
+  //   /*
+  //     為了解決這個問題，我們需要確保在 `Dialer` 中添加的事件處理器不會覆蓋掉 `SipCodeProvider` 中的事件處理器。這可以通過合併事件處理器來實現。
+  //   */
+  
+  //   // 保存原本的事件處理器
+  //   const originalHandler = userAgentState.delegate[eventType];
+  
+  //   // 設置新的事件處理器
+  //   userAgentState.delegate[eventType] = ((...args: unknown[]) => {
+  //     // 如果原本的事件處理器存在，先執行原本的事件處理器
+  //     if (originalHandler) {
+  //       (originalHandler as (...args: unknown[]) => void)(...args);
+  //     }
+  //     // 執行新的事件處理器
+  //     (toDoFn as (...args: unknown[]) => void)(...args);
+  //   }) as UserAgentDelegate[T];
+  // };
 
   // 發起通話
   const makeCall = useCallback(async (phoneNumber: string) => {
@@ -297,6 +481,7 @@ const stopLocalVideo = useCallback(() => {
           stopRemoteAudio();
           stopRemoteVideo();
           setTimeout(() => {
+            setCallType(null);
             setCallState(null);
           }, 1500);
           setCurrentInviter(null);
@@ -307,41 +492,77 @@ const stopLocalVideo = useCallback(() => {
     });
     try {
       await inviter.invite();
-      console.log(inviter);
       setCurrentInviter(inviter);
     } catch (error) {
       console.error('Failed to make call:', error);
       setSipError('Failed to make call');
     }
-  }, [userAgentState, domainList, setSipError, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone]);
+  }, [userAgentState, domainList, setSipError, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone, setCallType]);
 
-  // 結束通話
-  const hangUpCall = useCallback(async () => {
-    if (!currentInviter) {
-      console.error('No active call to hang up or cancel');
-      setSipState('No active call to hang up or cancel');
+  // 接聽來電
+  const answerCall = useCallback(async () => {
+    if (!currentInvitation) {
+      console.error('Invitation not initialized');
+      setSipError('Invitation not initialized');
       return;
     }
 
-    if (currentInviter.state === SessionState.Establishing) {
-      try {
-        await currentInviter.cancel();
-        setSipState("Call canceled");
-      } catch (error) {
-        console.error('Failed to cancel call:', error);
-        setSipError('Failed to cancel call');
-      }
-    } else {
-      try {
-        await currentInviter.bye();
-        setSipState("Call ended");
-      } catch (error) {
-        console.error('Failed to end call:', error);
-        setSipError('Failed to end call');
-      }
+    try {
+      await currentInvitation.accept();
     }
-    setCurrentInviter(null);
-  }, [currentInviter, setSipError, setSipState]);
+    catch (error) {
+      console.error('Failed to accept call:', error);
+      setSipError('Failed to accept call');
+    }
+  }, [currentInvitation, setSipError]);
+
+  // 結束通話
+  const hangUpCall = useCallback(async () => {
+    if (currentInviter) {
+      // 處理由你發起的通話
+      if (currentInviter.state === SessionState.Establishing) {
+        try {
+          await currentInviter.cancel();
+          setSipState("Call canceled");
+        } catch (error) {
+          console.error('Failed to cancel call:', error);
+          setSipError('Failed to cancel call');
+        }
+      } else {
+        try {
+          await currentInviter.bye();
+          setSipState("Call ended");
+        } catch (error) {
+          console.error('Failed to end call:', error);
+          setSipError('Failed to end call');
+        }
+      }
+      setCurrentInviter(null);
+    } else if (currentInvitation) {
+      // 處理來電
+      if (currentInvitation.state === SessionState.Establishing) {
+        try {
+          await currentInvitation.reject();
+          setSipState("Call canceled");
+        } catch (error) {
+          console.error('Failed to cancel call:', error);
+          setSipError('Failed to cancel call');
+        }
+      } else {
+        try {
+          await currentInvitation.bye();
+          setSipState("Call ended");
+        } catch (error) {
+          console.error('Failed to end call:', error);
+          setSipError('Failed to end call');
+        }
+      }
+      setCurrentInvitation(null);
+    } else {
+      console.error('No active call to hang up or cancel');
+      setSipState('No active call to hang up or cancel');
+    }
+  }, [currentInviter, currentInvitation, setSipError, setSipState]);
 
   // 發送 DTMF 音
   const sendDtmf = useCallback((digit: string) => {
@@ -380,9 +601,12 @@ const stopLocalVideo = useCallback(() => {
       initUserAgent,
       startUserAgent,
       stopUserAgent,
+      registerUserAgent,
+      unRegisterUserAgent,
       makeCall,
       hangUpCall,
       sendDtmf,
+      answerCall,
       playRemoteAudio,
       stopRemoteAudio,
       playRemoteVideo,
@@ -395,6 +619,7 @@ const stopLocalVideo = useCallback(() => {
       remoteVideoRef,
       dtmfAudioRef,
       ringbackAudioRef,
+      ringtoneAudioRef
     }}>
       {children}
     </SipCodeContext.Provider>

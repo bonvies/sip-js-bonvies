@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
 type CallStateState = {
+  callType: 'Inviter' | 'Invitation' | null;
   callState: 'Establishing' | 'Established' | 'Terminated' | null;
   sipError: string;
   sipState: string;
+  setCallType: (Type: 'Inviter' | 'Invitation' | null) => void;
   setCallState: (State: 'Establishing' | 'Established' | 'Terminated' | null) => void;
   setSipError: (Error: string) => void;
   setSipState: (State: string) => void;
@@ -11,9 +13,11 @@ type CallStateState = {
 
 
 export const useCallStateStore = create<CallStateState>((set) => ({
+  callType: null,
   callState: null,
   sipError: '',
   sipState: '',
+  setCallType: (type) => set({ callType: type }),
   setCallState: (state) => set({ callState: state }),
   setSipError: (error) => set({ sipError: error }),
   setSipState: (state) => set({ sipState: state }),
