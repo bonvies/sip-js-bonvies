@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useRef, ReactNode } from 'react';
-import { UserAgent, Inviter, SessionState, Invitation, Registerer, UserAgentDelegate } from 'sip.js';
+import { UserAgent, Inviter, SessionState, Invitation, Registerer } from 'sip.js';
 import { useSettingsStore } from '../stores/SipSetting';
 import { useCallStateStore } from '../stores/CallState';
 
@@ -288,7 +288,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to create UserAgent:', error);
       return null;
     }
-  }, [uri, wsServer, displayName, username, password, setSipState, setSipError, setCallType, setCallState, stopRemoteAudio]);
+  }, [uri, wsServer, displayName, username, password, setSipState, setSipError, setCallType, setCallState, playRingTone, stopRingkTone, stopRemoteAudio]);
 
   // 啟動 UserAgent
   const startUserAgent = useCallback(async () => {
@@ -520,15 +520,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const hangUpCall = useCallback(async () => {
     if (currentInviter) {
       // 處理由你發起的通話
-      if (currentInviter.state === SessionState.Establishing) {
-        try {
-          await currentInviter.cancel();
-          setSipState("Call canceled");
-        } catch (error) {
-          console.error('Failed to cancel call:', error);
-          setSipError('Failed to cancel call');
-        }
-      } else {
+      if (currentInviter.state === SessionState.Established) {
         try {
           await currentInviter.bye();
           setSipState("Call ended");
@@ -536,25 +528,34 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           console.error('Failed to end call:', error);
           setSipError('Failed to end call');
         }
-      }
-      setCurrentInviter(null);
-    } else if (currentInvitation) {
-      // 處理來電
-      if (currentInvitation.state === SessionState.Establishing) {
+
+      } else {
         try {
-          await currentInvitation.reject();
+          await currentInviter.cancel();
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
           setSipError('Failed to cancel call');
         }
-      } else {
+      }
+      setCurrentInviter(null);
+    } else if (currentInvitation) {
+      // 處理來電
+      if (currentInvitation.state === SessionState.Established) {
         try {
           await currentInvitation.bye();
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
           setSipError('Failed to end call');
+        }
+      } else {
+        try {
+          await currentInvitation.reject();
+          setSipState("Call canceled");
+        } catch (error) {
+          console.error('Failed to cancel call:', error);
+          setSipError('Failed to cancel call');
         }
       }
       setCurrentInvitation(null);
