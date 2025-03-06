@@ -1,14 +1,16 @@
 import { useContext, useEffect, useState } from 'react';
-import { Container, Button, Stack } from '@mui/material';
+import { Container, Button, Box, Stack, styled } from '@mui/material';
 import SipCodeContext from '../providers/SipCodeProvider';
 
 type VideoProps = {
   onToggleShowVideo: () => void;
+  onHandleHangUpCall: () => void;
 }
 
 export default function Video(props: VideoProps) {
   const sipContext = useContext(SipCodeContext);
   const [localVideoState, setLocalVideoState] = useState(false);
+  const [isSwapped, setIsSwapped] = useState(false);
 
   const { 
     playLocalVideo,
@@ -37,24 +39,97 @@ export default function Video(props: VideoProps) {
     stopLocalVideo();
   };
 
+  const handleHandleHangUpCall = () => {
+    props.onHandleHangUpCall();
+    props.onToggleShowVideo();
+    stopLocalVideo();
+  };
+
+  const handleSwapVideo = () => {
+    setIsSwapped((prev) => !prev);
+  };
+
   useEffect(() => {
-    toggleVideo(true); // 因為預設會在撥號成功後阻斷視訊流 所以先在這邊打開
+    toggleVideo(true);
     setLocalVideoState(true);
     playLocalVideo();
     playRemoteVideo();
   }, [playLocalVideo, playRemoteVideo, stopLocalVideo, stopRemoteVideo, toggleVideo]);
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <video id="localVideo" ref={localVideoRef} width='100%' autoPlay playsInline muted></video>
-      <video id="remoteVideo" ref={remoteVideoRef} width='100%' autoPlay playsInline muted></video>
-      <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+    <Container maxWidth="md" sx={{ mt: 4, position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
+      <Box 
+        position='relative' 
+        onClick={handleSwapVideo}
+        sx={{
+          height: {
+            xs: '100%',
+            sm: 'auto',
+          }
+        }}
+      >
+        <Box 
+          sx={isSwapped ? {
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            width: '30%',
+            height: 'auto',
+            borderRadius: '8px',
+            zIndex: 1,
+          } : {
+            position: 'relative',
+            height: {
+              xs: '100%',
+              sm: 'auto',
+            }
+          }}
+        >
+          <CustomRemoteVideo
+            id="remoteVideo"
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            muted
+          ></CustomRemoteVideo>
+        </Box>
+        <Box
+          sx={isSwapped ? {
+            position: 'relative',
+            height: {
+              xs: '100%',
+              sm: 'auto',
+            }
+          } : {
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            width: '30%',
+            height: 'auto',
+            borderRadius: '8px',
+            zIndex: 1,
+          }}
+        >
+          <CustomLocalVideo
+            id="localVideo"
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+          ></CustomLocalVideo>
+        </Box>
+      </Box>
+      <Stack
+        direction="row"
+        spacing={1}
+        width="100%"
+        sx={{ my: 2 }}
+      >
         <Button
-          fullWidth
           variant="contained"
           color="primary"
           onClick={handleToggleShowVideo}
-          sx={{ my: 2 }}
+          sx={{ width: '100%' }}
         >
           回到撥號盤
         </Button>
@@ -62,8 +137,16 @@ export default function Video(props: VideoProps) {
           fullWidth
           variant="contained"
           color="primary"
+          onClick={handleHandleHangUpCall}
+          sx={{ width: '100%' }}
+        >
+          Hang Up
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
           onClick={handleVideoCall}
-          sx={{ my: 2 }}
+          sx={{ width: '100%' }}
         >
           {!localVideoState ? '開啟視訊' : '關閉視訊'}
         </Button>
@@ -71,3 +154,23 @@ export default function Video(props: VideoProps) {
     </Container>
   );
 }
+
+const CustomRemoteVideo = styled('video')(() => ({
+  width: '100%',
+  height: '100%',
+  backgroundColor: 'black',
+  borderRadius: '8px',
+  border: '3px solid #fff',
+  objectFit: 'cover',
+  aspectRatio: '16/9', // 設定固定的長寬比
+}));
+
+const CustomLocalVideo = styled('video')(() => ({
+  width: '100%',
+  height: '100%',
+  backgroundColor: 'black',
+  border: '3px solid #fff',
+  borderRadius: '8px',
+  objectFit: 'cover',
+  aspectRatio: '16/9', // 設定固定的長寬比
+}));

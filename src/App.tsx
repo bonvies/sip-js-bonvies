@@ -22,22 +22,27 @@ export default function App() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ height: '100%'}}>
-      <Tabs
-        value={tabValue}
-        onChange={handleTabChange}
-        variant="fullWidth"
-      >
-        <Tab label="Dialer" />
-        <Tab label="Calls" />
-        <Tab label="Settings" />
-      </Tabs>
-      {tabValue === 0 && <Dialer />}
-      {tabValue === 1 && <Calls />}
-      {tabValue === 2 && <Settings />}
-      <audio ref={remoteAudioRef} autoPlay />
-      <audio ref={dtmfAudioRef} src={dtnf} />
-      <audio ref={ringbackAudioRef} src={ringbacktone} />
+    <Container sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Container maxWidth="xs">
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="fullWidth"
+        >
+          <Tab label="Dialer" />
+          <Tab label="Calls" />
+          <Tab label="Settings" />
+        </Tabs>
+      </Container>
+      <Container sx={{ display: "flex", flexGrow: 1, position: 'relative' }}>
+        {tabValue === 0 && <Dialer />}
+        {tabValue === 1 && <Calls />}
+        {tabValue === 2 && <Settings />}
+        <audio ref={remoteAudioRef} autoPlay />
+        <audio ref={dtmfAudioRef} src={dtnf} />
+        <audio ref={ringbackAudioRef} src={ringbacktone} />
+      </Container>
     </Container>
+
   );
 }

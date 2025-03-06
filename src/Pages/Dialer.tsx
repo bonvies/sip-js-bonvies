@@ -182,7 +182,7 @@ export default function Dialer() {
             Call 智能客服中心
           </Button>
         </Container>
-        ): <Video onToggleShowVideo={handleToggleShowVideo} />
+        ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
       }
     </>
 
