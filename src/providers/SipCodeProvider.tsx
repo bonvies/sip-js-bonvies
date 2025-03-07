@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useRef, ReactNode } from 'react';
-import { UserAgent, Inviter, SessionState, Invitation, Registerer, InvitationAcceptOptions } from 'sip.js';
+import { UserAgent, Inviter, SessionState, Invitation, Registerer, InvitationAcceptOptions, UserAgentDelegate } from 'sip.js';
 import { useSettingsStore } from '../stores/SipSetting';
 import { useCallStateStore } from '../stores/CallState';
 
@@ -14,6 +14,7 @@ type SipCodeContextType = {
   hangUpCall: () => Promise<void>; // 結束通話
   sendDtmf: (digit: string) => void; // 發送 DTMF 音
   answerCall: () => Promise<void>; // 接聽來電
+  delegateUserAgent: <T extends keyof UserAgentDelegate>(eventType: T, toDoFn: UserAgentDelegate[T]) => void; // 監聽 UserAgent
   playRemoteAudio: () => void; // 播放遠端音頻
   stopRemoteAudio: () => void; // 停止遠端音頻
   playRemoteVideo: () => void; // 播放遠端視頻
@@ -40,6 +41,7 @@ const SipCodeContext = createContext<SipCodeContextType>({
   hangUpCall: async () => {},
   sendDtmf: () => {},
   answerCall: async () => {},
+  delegateUserAgent: () => {},
   playRemoteAudio: () => {},
   stopRemoteAudio: () => {},
   playRemoteVideo: () => {},
@@ -368,46 +370,28 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [setSipError, setSipState]);
 
-    // 監聽 UserAgent
-  // const delegateUserAgent = <T extends keyof UserAgentDelegate>(
-  //   eventType: T,
-  //   toDoFn: UserAgentDelegate[T]
-  // ) => {
-  //   // 檢查 userAgentState 是否已經初始化
-  //   if (!userAgentState) {
-  //     console.error('UserAgent not initialized');
-  //     setSipError('UserAgent not initialized');
-  //     return;
-  //   }
+  // 監聽 UserAgent
+  const delegateUserAgent = <T extends keyof UserAgentDelegate>(
+    eventType: T,
+    toDoFn: UserAgentDelegate[T]
+  ) => {
+    // 檢查 userAgentState 是否已經初始化
+    if (!userAgentRef.current) {
+      console.error('UserAgent not initialized');
+      setSipError('UserAgent not initialized');
+      return;
+    }
   
-  //   // 確保 userAgentState.delegate 已經被初始化
-  //   if (!userAgentState.delegate) {
-  //     userAgentState.delegate = {};
-  //   }
-
-  //   /*
-  //     當你在 `Dialer` 組件中調用 `delegateUserAgent('onInvite', ...)` 時，這會覆蓋掉 `SipCodeProvider` 中原本設置的 `onInvite` 事件處理器。
-  //     這意味著，當有來電時，`SipCodeProvider` 中的 `onInvite` 處理器不再被調用，
-  //     因此 `setCurrentInvitation(invitation)` 也不會被執行，導致 `currentInvitation` 沒有被正確設置。
-  //   */
-
-  //   /*
-  //     為了解決這個問題，我們需要確保在 `Dialer` 中添加的事件處理器不會覆蓋掉 `SipCodeProvider` 中的事件處理器。這可以通過合併事件處理器來實現。
-  //   */
+    // 確保 userAgentState.delegate 已經被初始化
+    if (!userAgentRef.current.delegate) {
+      userAgentRef.current.delegate = {};
+    }
   
-  //   // 保存原本的事件處理器
-  //   const originalHandler = userAgentState.delegate[eventType];
-  
-  //   // 設置新的事件處理器
-  //   userAgentState.delegate[eventType] = ((...args: unknown[]) => {
-  //     // 如果原本的事件處理器存在，先執行原本的事件處理器
-  //     if (originalHandler) {
-  //       (originalHandler as (...args: unknown[]) => void)(...args);
-  //     }
-  //     // 執行新的事件處理器
-  //     (toDoFn as (...args: unknown[]) => void)(...args);
-  //   }) as UserAgentDelegate[T];
-  // };
+    // 設置新的事件處理器
+    userAgentRef.current.delegate[eventType] = ((...args: unknown[]) => {
+      (toDoFn as (...args: unknown[]) => void)(...args);
+    }) as UserAgentDelegate[T];
+  };
 
   // 發起通話
   const makeCall = useCallback(async (phoneNumber: string) => {
@@ -629,6 +613,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       hangUpCall,
       sendDtmf,
       answerCall,
+      delegateUserAgent,
       playRemoteAudio,
       stopRemoteAudio,
       playRemoteVideo,

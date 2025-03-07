@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Container, Button, Box, Stack, styled } from '@mui/material';
 import SipCodeContext from '../providers/SipCodeProvider';
 
@@ -17,6 +17,7 @@ export default function Video(props: VideoProps) {
     stopLocalVideo,
     playRemoteVideo,
     stopRemoteVideo,
+    delegateUserAgent,
     localVideoRef,
     remoteVideoRef,
     toggleVideo
@@ -34,10 +35,10 @@ export default function Video(props: VideoProps) {
     });
   };
 
-  const handleToggleShowVideo = () => {
+  const handleToggleShowVideo = useCallback(() => {
     props.onToggleShowVideo();
     stopLocalVideo();
-  };
+  }, [props, stopLocalVideo]);
 
   const handleHandleHangUpCall = () => {
     props.onHandleHangUpCall();
@@ -54,7 +55,7 @@ export default function Video(props: VideoProps) {
     setLocalVideoState(true);
     playLocalVideo();
     playRemoteVideo();
-  }, [playLocalVideo, playRemoteVideo, stopLocalVideo, stopRemoteVideo, toggleVideo]);
+  }, [delegateUserAgent, handleToggleShowVideo, playLocalVideo, playRemoteVideo, stopLocalVideo, stopRemoteVideo, toggleVideo]);
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
