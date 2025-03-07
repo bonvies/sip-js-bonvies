@@ -162,27 +162,27 @@ export default function Dialer() {
                 Hang Up
               </Button>
               {(callType === 'Invitation' && callState === 'Establishing') &&
-                <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAnswerCall}
-                    sx={{ my: 2 }}
-                  >
-                    Answer
-                  </Button> 
-                </Stack>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAnswerCall}
+                  sx={{ my: 2 }}
+                >
+                  Answer
+                </Button> 
               }
-              <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                onClick={handleToggleShowVideo}
-                sx={{ my: 2 }}
-              >
-                Video
-              </Button>
+              {callState === 'Established' && 
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  onClick={handleToggleShowVideo}
+                  sx={{ my: 2 }}
+                >
+                  Video
+                </Button>
+              }
             </Stack>
           }
           <Divider>指定撥打對象</Divider>
