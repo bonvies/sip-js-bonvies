@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useRef, ReactNode } from 'react';
-import { UserAgent, Inviter, SessionState, Invitation, Registerer } from 'sip.js';
+import { UserAgent, Inviter, SessionState, Invitation, Registerer, InvitationAcceptOptions } from 'sip.js';
 import { useSettingsStore } from '../stores/SipSetting';
 import { useCallStateStore } from '../stores/CallState';
 
@@ -77,45 +77,45 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const ringbackAudioRef = useRef<HTMLAudioElement>(null); // 回鈴音音頻引用
   const ringtoneAudioRef = useRef<HTMLAudioElement>(null); // 鈴聲音頻引用
 
-    // 播放 DTMF 音效
-    const playDtmfSound = useCallback(() => {
-      if (dtmfAudioRef.current) {
-        dtmfAudioRef.current.currentTime = 0;
-        dtmfAudioRef.current.play().catch(error => console.error('Failed to play DTMF sound:', error));
-      }
-    }, []);
-  
-    // 播放回鈴音
-    const playRingbackTone = useCallback(() => {
-      if (ringbackAudioRef.current) {
-        ringbackAudioRef.current.loop = true;
-        ringbackAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
-      }
-    }, []);
-  
-    // 停止回鈴音
-    const stopRingbackTone = useCallback(() => {
-      if (ringbackAudioRef.current) {
-        ringbackAudioRef.current.pause();
-        ringbackAudioRef.current.currentTime = 0;
-      }
-    }, []);
-  
-    // 播放鈴音
-    const playRingTone = useCallback(() => {
-      if (ringtoneAudioRef.current) {
-        ringtoneAudioRef.current.loop = true;
-        ringtoneAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
-      }
-    }, []);
-  
-    // 停止鈴音
-    const stopRingkTone = useCallback(() => {
-      if (ringtoneAudioRef.current) {
-        ringtoneAudioRef.current.pause();
-        ringtoneAudioRef.current.currentTime = 0;
-      }
-    }, []);
+  // 播放 DTMF 音效
+  const playDtmfSound = useCallback(() => {
+    if (dtmfAudioRef.current) {
+      dtmfAudioRef.current.currentTime = 0;
+      dtmfAudioRef.current.play().catch(error => console.error('Failed to play DTMF sound:', error));
+    }
+  }, []);
+
+  // 播放回鈴音
+  const playRingbackTone = useCallback(() => {
+    if (ringbackAudioRef.current) {
+      ringbackAudioRef.current.loop = true;
+      ringbackAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
+    }
+  }, []);
+
+  // 停止回鈴音
+  const stopRingbackTone = useCallback(() => {
+    if (ringbackAudioRef.current) {
+      ringbackAudioRef.current.pause();
+      ringbackAudioRef.current.currentTime = 0;
+    }
+  }, []);
+
+  // 播放鈴音
+  const playRingTone = useCallback(() => {
+    if (ringtoneAudioRef.current) {
+      ringtoneAudioRef.current.loop = true;
+      ringtoneAudioRef.current.play().catch(error => console.error('Failed to play ringback tone:', error));
+    }
+  }, []);
+
+  // 停止鈴音
+  const stopRingkTone = useCallback(() => {
+    if (ringtoneAudioRef.current) {
+      ringtoneAudioRef.current.pause();
+      ringtoneAudioRef.current.currentTime = 0;
+    }
+  }, []);
   
 
   // 播放遠端音頻
@@ -258,6 +258,15 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
                         remoteStream.addTrack(receiver.track);
                       }
                     });
+
+                    // 先阻斷本地視訊流傳送 直到進到 video 組件再打開
+                    const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
+                    if (!localStream) {
+                      console.error('In Established, No local video stream found');
+                      setSipError('In Established, No local video stream found');
+                      return;
+                    }
+                    localStream.enabled = true;
 
                     if(!remoteAudioRef.current) {
                       console.error('No remote audio element found');
@@ -507,8 +516,17 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       return;
     }
 
+    const invitationAcceptOptions: InvitationAcceptOptions = {
+      sessionDescriptionHandlerOptions: {
+        constraints: {
+          audio: true,
+          video: true,
+        },
+      },
+    }
+
     try {
-      await currentInvitation.accept();
+      await currentInvitation.accept(invitationAcceptOptions);
     }
     catch (error) {
       console.error('Failed to accept call:', error);
@@ -578,6 +596,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // 切換視訊是否傳送給對方
   const toggleVideo = useCallback(async (streamSwitch: boolean) => {
+    console.log("currentInviter", currentInviter);
     if (currentInviter && currentInviter.sessionDescriptionHandler) {
       const peerConnection = (currentInviter.sessionDescriptionHandler as unknown as { peerConnection: RTCPeerConnection }).peerConnection;
       const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;

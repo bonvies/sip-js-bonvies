@@ -53,6 +53,7 @@ export default function Dialer() {
 
   const handleAnswerCall = () => {
     answerCall();
+    setCallType('Invitation');
   };
 
   const handleToggleShowVideo = () => {
@@ -121,7 +122,7 @@ export default function Dialer() {
               </Grid>
             ))}
           </Grid>
-          {!callState ? 
+          {!callState &&
             <Stack direction="row" spacing={1} sx={{ my: 2 }}>
               <Button
                 fullWidth
@@ -148,27 +149,41 @@ export default function Dialer() {
                 Fix
               </Button>
             </Stack>
-          :
-          <Stack direction="row" spacing={1} sx={{ my: 2 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleHangUpCall}
-              sx={{ my: 2 }}
-            >
-              Hang Up
-            </Button>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleToggleShowVideo}
-              sx={{ my: 2 }}
-            >
-              Video
-            </Button>
-          </Stack>
+          }
+          {callState &&
+            <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={handleHangUpCall}
+                sx={{ my: 2 }}
+              >
+                Hang Up
+              </Button>
+              {(callType === 'Invitation' && callState === 'Establishing') &&
+                <Stack direction="row" spacing={1} sx={{ my: 2 }}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={handleAnswerCall}
+                    sx={{ my: 2 }}
+                  >
+                    Answer
+                  </Button> 
+                </Stack>
+              }
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                onClick={handleToggleShowVideo}
+                sx={{ my: 2 }}
+              >
+                Video
+              </Button>
+            </Stack>
           }
           <Divider>指定撥打對象</Divider>
           <Button
@@ -201,15 +216,6 @@ export default function Dialer() {
           >
             Call 智能客服中心
           </Button>
-          <Button
-              fullWidth
-              variant="contained"
-              color="secondary"
-              onClick={handleAnswerCall}
-              sx={{ my: 2 }}
-            >
-              Answer Call
-            </Button>
         </Container>
         ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
       }
