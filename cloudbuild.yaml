@@ -1,11 +1,3 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/aiot-bonvies/sip-js-bonvies', '.']
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/aiot-bonvies/sip-js-bonvies']
-
-images:
-  - 'gcr.io/aiot-bonvies/sip-js-bonvies'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/sip-js-bonvies', '.' ]
