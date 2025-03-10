@@ -1,3 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies', '.' ]
+  args: [ 'build', '-t', 'gcr.io/asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/quickstart-image', '.' ]
+images:
+- 'gcr.io/asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/quickstart-image'
