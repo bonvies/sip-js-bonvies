@@ -1,3 +1,3 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/aiot-bonvies/sip-js-bonvies/sip-js-bonvies', '.' ]
+  args: [ 'build', '-t', 'asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies', '.' ]
