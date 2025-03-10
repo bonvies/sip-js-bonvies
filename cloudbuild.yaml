@@ -3,3 +3,5 @@ steps:
   args: [ 'build', '-t', 'gcr.io/asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/quickstart-image', '.' ]
 images:
 - 'gcr.io/asia-east1-docker.pkg.dev/aiot-bonvies/sip-js-bonvies/quickstart-image'
+options:
+  logging: CLOUD_LOGGING_ONLY
