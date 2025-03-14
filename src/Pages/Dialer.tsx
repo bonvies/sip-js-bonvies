@@ -88,6 +88,15 @@ export default function Dialer() {
     }
   }, [callState, callType]);
 
+  useEffect(() => {
+    if(callState === 'Terminated') {
+      setTimeout(() => {
+        setShowVideo(false);
+        setCallNumber('');
+      }, 1000);
+    }
+  }, [callState]);
+
   // 初始化 UserAgent 並在組件卸載時停止 UserAgent
   useEffect(() => {
     initUserAgent();

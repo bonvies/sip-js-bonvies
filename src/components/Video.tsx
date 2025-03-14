@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Container, Button, Box, Stack, styled } from '@mui/material';
+import { Container, Button, Box, Stack, styled, Typography } from '@mui/material';
 import SipCodeContext from '../providers/SipCodeProvider';
+import { useCallStateStore } from '../stores/CallState';
 
 type VideoProps = {
   onToggleShowVideo: () => void;
@@ -8,6 +9,8 @@ type VideoProps = {
 }
 
 export default function Video(props: VideoProps) {
+
+  const { callState } = useCallStateStore(); // 使用 CallState store
   const sipContext = useContext(SipCodeContext);
   const [localVideoState, setLocalVideoState] = useState(false);
   const [isSwapped, setIsSwapped] = useState(false);
@@ -42,7 +45,9 @@ export default function Video(props: VideoProps) {
 
   const handleHandleHangUpCall = () => {
     props.onHandleHangUpCall();
-    props.onToggleShowVideo();
+    setTimeout(() => {
+      props.onToggleShowVideo();
+    },1000);
     stopLocalVideo();
   };
 
@@ -55,10 +60,18 @@ export default function Video(props: VideoProps) {
     setLocalVideoState(true);
     playLocalVideo();
     playRemoteVideo();
+    return () => {
+      toggleVideo(false);
+      stopLocalVideo();
+      stopRemoteVideo();
+    }
   }, [delegateUserAgent, handleToggleShowVideo, playLocalVideo, playRemoteVideo, stopLocalVideo, stopRemoteVideo, toggleVideo]);
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
+      <Typography variant="h6" align="center" sx={{ mb: 2 }}>
+        {callState}
+      </Typography>
       <Box 
         position='relative' 
         onClick={handleSwapVideo}
