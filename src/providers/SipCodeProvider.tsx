@@ -199,16 +199,39 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     
     try {
-      // 創建 UserAgent
-      const ua = new UserAgent({
-        uri,
-        displayName,
-        authorizationUsername: username,
-        authorizationPassword: password,
-        transportOptions: {
-          server: wsServer,
+    // 初始化 UserAgent 時，添加 STUN/TURN 配置
+    const ua = new UserAgent({
+      uri,
+      displayName,
+      authorizationUsername: username,
+      authorizationPassword: password,
+      transportOptions: {
+        server: wsServer,
+      },
+      sessionDescriptionHandlerFactoryOptions: {
+        constraints: {
+          audio: true,
+          video: true,
         },
-      });
+        peerConnectionOptions: {
+          rtcConfiguration: {
+            iceServers: [
+              { urls: "stun:stun.sbc.telesale.org:3478" },
+              {
+                urls: "turn:turn.sbc.telesale.org:3478",
+                username: "bonuc",
+                credential: "bonuc"
+              },
+              {
+                urls: "turns:turn.sbc.telesale.org:5349",
+                username: "bonuc",
+                credential: "bonuc"
+              }
+            ]
+          }
+        }
+      }
+    });
       userAgentRef.current = ua;
 
       // 啟動 UserAgent
