@@ -1,6 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Container, Grid2 as Grid, Button, Typography, Stack, Divider } from '@mui/material';
 import SipCodeContext  from '../providers/SipCodeProvider';
+import ShowCallState from '../components/ShowCallState';
 import { useCallStateStore } from '../stores/CallState';
 
 import Video from '../components/Video';
@@ -60,34 +61,6 @@ export default function Dialer() {
     setShowVideo((prev) => !prev);
   }
 
-  const showCallState = useMemo(() => {
-    if(callType === 'Inviter') {
-      switch (callState) {
-        case 'Establishing':
-          return '撥號中';
-        case 'Established':
-          return '通話中';
-        case 'Terminated':
-          return '通話結束';
-        default:
-          return '';
-      }
-    }
-
-    if(callType === 'Invitation') {
-      switch (callState) {
-        case 'Establishing':
-          return '來電中';
-        case 'Established':
-          return '通話中';
-        case 'Terminated':
-          return '通話結束';
-        default:
-          return '';
-      }
-    }
-  }, [callState, callType]);
-
   useEffect(() => {
     if(callState === 'Terminated') {
       setTimeout(() => {
@@ -114,9 +87,7 @@ export default function Dialer() {
           <Typography variant="h4" align="center" sx={{ mb: 2 }}>
             {callNumber ? callNumber : '請輸入撥打號碼'}
           </Typography>
-          <Typography variant="h6" align="center" sx={{ mb: 2 }}>
-            {showCallState}
-          </Typography>
+          <ShowCallState />
           <Grid container spacing={1}>
             {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((item) => (
               <Grid key={item} size={4}>
