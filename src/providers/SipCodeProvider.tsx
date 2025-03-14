@@ -59,7 +59,7 @@ const SipCodeContext = createContext<SipCodeContextType>({
 
 // 創建一個 Provider 組件，提供 SIP 功能和狀態
 export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { setSipState, setCallType, setCallState, setSipError } = useCallStateStore(); // 使用 CallState store
+  const { setSipState, setCallType, setCallState } = useCallStateStore(); // 使用 CallState store
   const { displayName, username, password, serverAddress: wsServer, sipDomain: domain } = useSettingsStore(); // 使用 Settings store
 
   const userAgentRef = useRef<UserAgent | null>(null); // 使用 useRef 來儲存 UserAgent 狀態
@@ -240,7 +240,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSipState('Start');
       } catch (error) {
         console.error('Failed to start:', error);
-        setSipError('Failed to start');
+        // setSipError('Failed to start');
       }
 
       // 註冊 UserAgent
@@ -250,7 +250,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSipState('Registered');
       } catch (error) {
         console.error('Failed to register:', error);
-        setSipError('Failed to register');
+        // setSipError('Failed to register');
       }
 
       // 監聽來電事件
@@ -288,14 +288,14 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
                     const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
                     if (!localStream) {
                       console.error('In Established, No local video stream found');
-                      setSipError('In Established, No local video stream found');
+                      // setSipError('In Established, No local video stream found');
                       return;
                     }
                     localStream.enabled = false;
 
                     if(!remoteAudioRef.current) {
                       console.error('No remote audio element found');
-                      setSipError('No remote audio element found');
+                      // setSipError('No remote audio element found');
                       return;
                     }
                     remoteAudioRef.current.srcObject = remoteStream;
@@ -322,13 +322,13 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to create UserAgent:', error);
       return null;
     }
-  }, [uri, wsServer, displayName, username, password, setSipState, setSipError, setCallType, setCallState, playRingTone, stopRingkTone, stopRemoteAudio]);
+  }, [uri, wsServer, displayName, username, password, setSipState, setCallType, setCallState, playRingTone, stopRingkTone, stopRemoteAudio]);
 
   // 啟動 UserAgent
   const startUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
+      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -337,15 +337,15 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent started');
     } catch (error) {
       console.error('Failed to start UserAgent:', error);
-      setSipError('Failed to start UserAgent');
+      // setSipError('Failed to start UserAgent');
     }
-  }, [setSipError, setSipState]);
+  }, [setSipState]);
 
   // 停止 UserAgent
   const stopUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
+      // setSipError('UserAgent not initialized');
       return;
     }
     try {
@@ -353,15 +353,15 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent stopped');
     } catch (error) {
       console.error('Failed to stop UserAgent:', error);
-      setSipError('Failed to stop UserAgent');
+      // setSipError('Failed to stop UserAgent');
     }
-  }, [setSipError, setSipState]);
+  }, [setSipState]);
 
   // 註冊 UserAgent
   const registerUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
+      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -372,15 +372,15 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent registered');
     } catch (error) {
       console.error('Failed to register UserAgent:', error);
-      setSipError('Failed to register UserAgent');
+      // setSipError('Failed to register UserAgent');
     }
-  }, [setSipError, setSipState]);
+  }, [setSipState]);
 
   // 解除註冊 UserAgent
   const unRegisterUserAgent = useCallback(async () => {
     if (!registererRef.current) {
       console.error('UserAgent not register');
-      setSipError('UserAgent not register');
+      // setSipError('UserAgent not register');
       return;
     }
 
@@ -389,9 +389,9 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent unregistered');
     } catch (error) {
       console.error('Failed to unregistered UserAgent:', error);
-      setSipError('Failed to unregistered UserAgent');
+      // setSipError('Failed to unregistered UserAgent');
     }
-  }, [setSipError, setSipState]);
+  }, [setSipState]);
 
   // 監聽 UserAgent
   const delegateUserAgent = <T extends keyof UserAgentDelegate>(
@@ -401,7 +401,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     // 檢查 userAgentState 是否已經初始化
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
+      // setSipError('UserAgent not initialized');
       return;
     }
   
@@ -420,7 +420,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const makeCall = useCallback(async (phoneNumber: string) => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      setSipError('UserAgent not initialized');
+      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -466,7 +466,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
               const localStream = peerConnection.getSenders().find((sender: RTCRtpSender) => sender.track?.kind === 'video')?.track;
               if (!localStream) {
                 console.error('In Established, No local video stream found');
-                setSipError('In Established, No local video stream found');
+                // setSipError('In Established, No local video stream found');
                 return;
               }
               localStream.enabled = false;
@@ -511,15 +511,15 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       inviterRef.current = inviter;
     } catch (error) {
       console.error('Failed to make call:', error);
-      setSipError('Failed to make call');
+      // setSipError('Failed to make call');
     }
-  }, [domainList, setSipError, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone, setCallType]);
+  }, [domainList, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone, setCallType]);
 
   // 接聽來電
   const answerCall = useCallback(async () => {
     if (!invitationRef.current) {
       console.error('Invitation not initialized');
-      setSipError('Invitation not initialized');
+      // setSipError('Invitation not initialized');
       return;
     }
 
@@ -537,9 +537,9 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     catch (error) {
       console.error('Failed to accept call:', error);
-      setSipError('Failed to accept call');
+      // setSipError('Failed to accept call');
     }
-  }, [setSipError]);
+  }, []);
 
   // 結束通話
   const hangUpCall = useCallback(async () => {
@@ -551,7 +551,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
-          setSipError('Failed to end call');
+          // setSipError('Failed to end call');
         }
 
       } else {
@@ -560,7 +560,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
-          setSipError('Failed to cancel call');
+          // setSipError('Failed to cancel call');
         }
       }
       inviterRef.current = null;
@@ -572,7 +572,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
-          setSipError('Failed to end call');
+          // setSipError('Failed to end call');
         }
       } else {
         try {
@@ -580,7 +580,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
-          setSipError('Failed to cancel call');
+          // setSipError('Failed to cancel call');
         }
       }
       invitationRef.current = null;
@@ -588,7 +588,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('No active call to hang up or cancel');
       setSipState('No active call to hang up or cancel');
     }
-  }, [setSipError, setSipState]);
+  }, [setSipState]);
 
   // 發送 DTMF 音
   const sendDtmf = useCallback((digit: string) => {
@@ -612,7 +612,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       if (!localStream) {
         console.error('No local video stream found');
-        setSipError('No local video stream found');
+        // setSipError('No local video stream found');
         return;
       }
 
@@ -622,7 +622,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         localStream.enabled = false;
       }
     }
-  }, [setSipError]);
+  }, []);
 
   // 提供 SIP 功能和狀態給子組件
   return (
