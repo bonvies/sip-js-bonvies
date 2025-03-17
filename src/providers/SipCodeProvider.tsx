@@ -216,7 +216,17 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         peerConnectionOptions: {
           rtcConfiguration: {
             iceServers: [
-              { urls: "stun:stun.l.google.com:19302" }
+              { urls: "stun:stun.l.google.com:19302" },
+              {
+                urls: "turn:turn.sbc.telesale.org:3478",
+                username: "bonuc",
+                credential: "bonuc"
+              },
+              {
+                urls: "turns:turn.sbc.telesale.org:5349",
+                username: "bonuc",
+                credential: "bonuc"
+              }
             ]
           }
         }
