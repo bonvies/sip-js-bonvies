@@ -25,7 +25,7 @@ export default function App() {
 
   return (
     <Container sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Alert severity="info">TEST-03 : UserAgent 添加 Google Stun 和 turn 設定</Alert>
+      <Alert severity="info">TEST-04 : UserAgent 添加 Google Stun 和 turn 和 強制使用中繼 iceTransportPolicy:relay 設定</Alert>
       <Container maxWidth="xs">
         <Tabs
           value={tabValue}
