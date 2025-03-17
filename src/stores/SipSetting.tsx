@@ -13,16 +13,16 @@ type SettingsState = {
   setPassword: (password: string) => void;
 }
 
-const getLocalStorageValue = (key: string, defaultValue: string) => {
-  return localStorage.getItem(key) || defaultValue;
-};
+// const getLocalStorageValue = (key: string, defaultValue: string) => {
+//   return localStorage.getItem(key) || defaultValue;
+// };
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  displayName: getLocalStorageValue('displayName', ''),
-  sipDomain: getLocalStorageValue('sipDomain', ''),
-  serverAddress: getLocalStorageValue('serverAddress', ''),
-  username: getLocalStorageValue('username', ''),
-  password: getLocalStorageValue('password', ''),
+  displayName: 'ASUS IoT',
+  sipDomain: 'asustw.sbc.telesale.org',
+  serverAddress: 'wss://asustw.sbc.telesale.org:7443/ws',
+  username: '3005',
+  password: '1234qwerQWER',
   setDisplayName: (name) => set({ displayName: name }),
   setSipDomain: (domain) => set({ sipDomain: domain }),
   setServerAddress: (address) => set({ serverAddress: address }),

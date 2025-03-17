@@ -6,6 +6,9 @@ import { useCallStateStore } from '../stores/CallState';
 
 import Video from '../components/Video';
 
+// import asusLogo from '../../public/ASUS-IoT_logo.jpg';
+// import bonviesLogo from '../../public/Bonvies_Logo.png';
+
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
   const [showVideo, setShowVideo] = useState(false);
@@ -97,7 +100,7 @@ export default function Dialer() {
                   onClick={() => handleDialButtonClick(item)}
                   sx={{ height: 60 }}
                 >
-                  {item}
+                  <p style={{fontSize:'28px'}}>{item}</p>
                 </Button>
               </Grid>
             ))}
@@ -166,7 +169,7 @@ export default function Dialer() {
             </Stack>
           }
           <Divider>指定撥打對象</Divider>
-          <Button
+          {/* <Button
             fullWidth
             variant="contained"
             color="primary"
@@ -185,17 +188,18 @@ export default function Dialer() {
             sx={{ mt: 2 }}
           >
             Call Aya
-          </Button>
+          </Button> */}
           <Button
             fullWidth
             variant="contained"
             color="primary"
             onClick={(e) => handleCall(e, '77505134')}
             disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, py: 2 }}
           >
             Call 智能客服中心
           </Button>
+
         </Container>
         ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
       }

@@ -1,4 +1,4 @@
-import { Container, Tabs, Tab, Alert } from '@mui/material';
+import { Container, Stack } from '@mui/material';
 import { useContext, useState } from 'react';
 import Dialer from "./Pages/Dialer";
 import Calls from "./Pages/Calls";
@@ -8,8 +8,11 @@ import ringbacktone from './assets/ringbacktone.mp3';
 import ringtone from './assets/ringtone.mp3';
 import SipCodeContext from './providers/SipCodeProvider';
 
+import asusLogo from '../public/ASUS-IoT_logo.jpg';
+import bonviesLogo from '../public/Bonvies_Logo.png';
+
 export default function App() {
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue] = useState(0);
 
   const sipContext = useContext(SipCodeContext);
   const { 
@@ -19,15 +22,21 @@ export default function App() {
     ringtoneAudioRef
   } = sipContext || {};
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  // const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+  //   setTabValue(newValue);
+  // };
 
   return (
-    <Container sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Alert severity="info">TEST-04 : UserAgent 添加 Google Stun 和 turn 和 強制使用中繼 iceTransportPolicy:relay 設定</Alert>
+    <Container sx={{ display: "flex", justifyContent: 'center', flexDirection: "column", height: "100%" }}>
+      <Container sx={{ mt: 2, height:"40px", width: '200px' }}>
+        <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+          <img src={asusLogo} alt="ASUS Logo" style={{ maxWidth: '100%', height: 'auto' }} />
+          <p style={{fontSize: '16px'}}>X</p>
+          <img src={bonviesLogo} alt="Bonvies Logo" style={{ maxWidth: '50%', height: 'auto' }} />
+        </Stack>
+      </Container>
       <Container maxWidth="xs">
-        <Tabs
+        {/* <Tabs
           value={tabValue}
           onChange={handleTabChange}
           variant="fullWidth"
@@ -35,12 +44,13 @@ export default function App() {
           <Tab label="Dialer" />
           <Tab label="Calls" />
           <Tab label="Settings" />
-        </Tabs>
+        </Tabs> */}
       </Container>
-      <Container sx={{ display: "flex", flexGrow: 1, position: 'relative' }}>
+      <Container sx={{ position: 'relative' }}>
         {tabValue === 0 && <Dialer />}
         {tabValue === 1 && <Calls />}
         {tabValue === 2 && <Settings />}
+
         <audio ref={remoteAudioRef} autoPlay />
         <audio ref={dtmfAudioRef} src={dtnf} />
         <audio ref={ringbackAudioRef} src={ringbacktone} />
