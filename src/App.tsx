@@ -1,4 +1,4 @@
-import { Container, Tabs, Tab } from '@mui/material';
+import { Container, Tabs, Tab, Alert } from '@mui/material';
 import { useContext, useState } from 'react';
 import Dialer from "./Pages/Dialer";
 import Calls from "./Pages/Calls";
@@ -25,6 +25,7 @@ export default function App() {
 
   return (
     <Container sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Alert severity="info">TEST-01 : UserAgent 沒有添加額外設定的版本</Alert>
       <Container maxWidth="xs">
         <Tabs
           value={tabValue}
