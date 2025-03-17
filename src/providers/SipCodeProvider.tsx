@@ -207,6 +207,19 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       authorizationPassword: password,
       transportOptions: {
         server: wsServer,
+      },
+      sessionDescriptionHandlerFactoryOptions: {
+        constraints: {
+          audio: true,
+          video: true,
+        },
+        peerConnectionOptions: {
+          rtcConfiguration: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" }
+            ]
+          }
+        }
       }
     });
       userAgentRef.current = ua;
