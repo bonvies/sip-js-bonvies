@@ -86,7 +86,7 @@ export default function Dialer() {
     <>
       {!showVideo
         ? (
-        <Container maxWidth="xs" sx={{ mt: 4 }}>
+        <Container maxWidth="xs" sx={{ mt: 1 }}>
           <Typography variant="h4" align="center" sx={{ mb: 2 }}>
             {callNumber ? callNumber : '請輸入撥打號碼'}
           </Typography>
@@ -98,7 +98,7 @@ export default function Dialer() {
                   fullWidth
                   variant="outlined"
                   onClick={() => handleDialButtonClick(item)}
-                  sx={{ height: 60 }}
+                  sx={{ height: 50 }}
                 >
                   <p style={{fontSize:'28px'}}>{item}</p>
                 </Button>
@@ -195,11 +195,29 @@ export default function Dialer() {
             color="primary"
             onClick={(e) => handleCall(e, '3009')}
             disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-            sx={{ mt: 2, py: 2 }}
+            sx={{ mt: 2, py: 1.5 }}
           >
             Call 智能客服中心
           </Button>
-
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={(e) => handleCall(e, '3004')}
+            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+            sx={{ mt: 2, py: 1.5 }}
+          >
+            Call 視訊服務影像專員
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="error"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2, py: 1.5 }}
+          >
+            重置系統
+          </Button>
         </Container>
         ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
       }

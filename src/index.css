@@ -3,5 +3,11 @@ body {
 }
 
 #root {
-  height: 100dvh;
+  @media (max-width: 768px) {
+    min-height: 100dvh;
+  }
+
+  @media (min-width: 769px) {
+    height: 100dvh;
+  }
 }
