@@ -87,7 +87,7 @@ export default function Dialer() {
       {!showVideo
         ? (
         <Container maxWidth="xs" sx={{ mt: 1 }}>
-          <Typography variant="h4" align="center" sx={{ mb: 2 }}>
+          <Typography variant="h5" align="center" sx={{ mb: 2 }}>
             {callNumber ? callNumber : '請輸入撥打號碼'}
           </Typography>
           <ShowCallState />
@@ -98,7 +98,7 @@ export default function Dialer() {
                   fullWidth
                   variant="outlined"
                   onClick={() => handleDialButtonClick(item)}
-                  sx={{ height: 50 }}
+                  sx={{ height: 40 }}
                 >
                   <p style={{fontSize:'28px'}}>{item}</p>
                 </Button>

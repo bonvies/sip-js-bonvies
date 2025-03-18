@@ -28,7 +28,7 @@ export default function App() {
   return (
     <Container sx={{ display: "flex",  justifyContent: {xs: 'flex-start', sm:'center'}, flexDirection: "column", height: "100%" }}>
       <Box sx={{ display: "flex", justifyContent: 'center' }}>
-        <img src={logo} alt="logo" style={{ width: '150px' }} />
+        <img src={logo} alt="logo" style={{ width: '370px' }} />
       </Box>
       <Container maxWidth="xs">
         {/* <Tabs
