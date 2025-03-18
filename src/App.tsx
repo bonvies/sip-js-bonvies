@@ -1,4 +1,4 @@
-import { Container, Stack } from '@mui/material';
+import { Container, Box } from '@mui/material';
 import { useContext, useState } from 'react';
 import Dialer from "./Pages/Dialer";
 import Calls from "./Pages/Calls";
@@ -8,8 +8,7 @@ import ringbacktone from './assets/ringbacktone.mp3';
 import ringtone from './assets/ringtone.mp3';
 import SipCodeContext from './providers/SipCodeProvider';
 
-import asusLogo from '../public/ASUS-IoT_logo.jpg';
-import bonviesLogo from '../public/Bonvies_Logo.png';
+import logo from '../public/ASUS-Iot X bonvies.png';
 
 export default function App() {
   const [tabValue] = useState(0);
@@ -27,14 +26,10 @@ export default function App() {
   // };
 
   return (
-    <Container sx={{ display: "flex", justifyContent: 'center', flexDirection: "column", height: "100%" }}>
-      <Container sx={{ mt: 2, height:"40px", width: '200px' }}>
-        <Stack direction="row" spacing={2} sx={{ justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-          <img src={asusLogo} alt="ASUS Logo" style={{ maxWidth: '100%', height: 'auto' }} />
-          <p style={{fontSize: '16px'}}>X</p>
-          <img src={bonviesLogo} alt="Bonvies Logo" style={{ maxWidth: '50%', height: 'auto' }} />
-        </Stack>
-      </Container>
+    <Container sx={{ display: "flex", justifyContent: 'center', alignItems: 'center', flexDirection: "column", height: "100%" }}>
+      <Box sx={{ display: "flex", justifyContent: 'center' }}>
+        <img src={logo} alt="logo" style={{ width: '280px' }} />
+      </Box>
       <Container maxWidth="xs">
         {/* <Tabs
           value={tabValue}
