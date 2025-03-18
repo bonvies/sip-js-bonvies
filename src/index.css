@@ -3,5 +3,5 @@ body {
 }
 
 #root {
-  height: 100dvh;
+  min-height: 100dvh;
 }
