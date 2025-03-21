@@ -18,7 +18,8 @@ export default function Video(props: VideoProps) {
     stopLocalVideo,
     playRemoteVideo,
     stopRemoteVideo,
-    delegateUserAgent,
+    playRemoteAudio,
+    stopRemoteAudio,
     localVideoRef,
     remoteVideoRef,
     toggleVideo
@@ -54,16 +55,17 @@ export default function Video(props: VideoProps) {
   };
 
   useEffect(() => {
-    toggleVideo(true);
     setLocalVideoState(true);
     playLocalVideo();
     playRemoteVideo();
+    playRemoteAudio();
+    toggleVideo(true);
     return () => {
-      toggleVideo(false);
       stopLocalVideo();
       stopRemoteVideo();
+      stopRemoteAudio();
     }
-  }, [delegateUserAgent, handleToggleShowVideo, playLocalVideo, playRemoteVideo, stopLocalVideo, stopRemoteVideo, toggleVideo]);
+  }, [playLocalVideo, playRemoteAudio, playRemoteVideo, stopLocalVideo, stopRemoteAudio, stopRemoteVideo, toggleVideo]);
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
