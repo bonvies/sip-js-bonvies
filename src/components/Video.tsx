@@ -44,6 +44,9 @@ export default function Video(props: VideoProps) {
 
   const handleHandleHangUpCall = () => {
     props.onHandleHangUpCall();
+    stopLocalVideo();
+    stopRemoteVideo();
+    stopRemoteAudio();
     setTimeout(() => {
       props.onToggleShowVideo();
     },1000);
@@ -61,9 +64,7 @@ export default function Video(props: VideoProps) {
     playRemoteAudio();
     toggleVideo(true);
     return () => {
-      stopLocalVideo();
-      stopRemoteVideo();
-      stopRemoteAudio();
+      toggleVideo(false);
     }
   }, [playLocalVideo, playRemoteAudio, playRemoteVideo, stopLocalVideo, stopRemoteAudio, stopRemoteVideo, toggleVideo]);
 
