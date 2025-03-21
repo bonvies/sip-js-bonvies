@@ -9,6 +9,7 @@ import Video from '../components/Video';
 export default function Dialer() {
   const [callNumber, setCallNumber] = useState('');
   const [showVideo, setShowVideo] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   
   const sipContext = useContext(SipCodeContext);
   const { 
@@ -43,6 +44,7 @@ export default function Dialer() {
     }
     if (callNumber) {
       makeCall(callNumber);
+      setIsButtonDisabled(true);
     }
     setCallType('Inviter');
   };
@@ -55,6 +57,7 @@ export default function Dialer() {
   const handleAnswerCall = () => {
     answerCall();
     setCallType('Invitation');
+    setIsButtonDisabled(true);
   };
 
   const handleToggleShowVideo = () => {
@@ -62,6 +65,7 @@ export default function Dialer() {
   }
 
   useEffect(() => {
+    setIsButtonDisabled(false);
     if(callState === 'Terminated') {
       setTimeout(() => {
         setShowVideo(false);
@@ -117,6 +121,7 @@ export default function Dialer() {
                 variant="contained"
                 color="primary"
                 onClick={handleCall}
+                disabled={isButtonDisabled}
               >
                 Call
               </Button>
@@ -147,6 +152,7 @@ export default function Dialer() {
                   variant="contained"
                   color="primary"
                   onClick={handleAnswerCall}
+                  disabled={isButtonDisabled}
                   sx={{ my: 2 }}
                 >
                   Answer
