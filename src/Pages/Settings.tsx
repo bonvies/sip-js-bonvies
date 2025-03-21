@@ -78,7 +78,6 @@ export default function Settings() {
         value={localValues.displayName}
         onChange={handleChange('displayName')}
         sx={{ mb: 2 }}
-        disabled={import.meta.env.VITE_DISPLAY_NAME}
       />
       <Typography variant="h6" gutterBottom>
         SIP Domain
@@ -90,7 +89,6 @@ export default function Settings() {
         value={localValues.sipDomain}
         onChange={handleChange('sipDomain')}
         sx={{ mb: 2 }}
-        disabled={import.meta.env.VITE_DOMIN}
       />
       <Typography variant="h6" gutterBottom>
         Server Address
@@ -102,7 +100,6 @@ export default function Settings() {
         value={localValues.serverAddress}
         onChange={handleChange('serverAddress')}
         sx={{ mb: 2 }}
-        disabled={import.meta.env.VITE_ADDRESS}
       />
       <Typography variant="h6" gutterBottom>
         SIP Username
@@ -114,7 +111,6 @@ export default function Settings() {
         value={localValues.username}
         onChange={handleChange('username')}
         sx={{ mb: 2 }}
-        disabled={import.meta.env.VITE_USERNAME}
       />
       <Typography variant="h6" gutterBottom>
         SIP Password
@@ -139,7 +135,6 @@ export default function Settings() {
           ),
         }}
         sx={{ mb: 2 }}
-        disabled={import.meta.env.VITE_PASSWORD}
       />
       <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
         <Button variant="contained" color="primary" onClick={handleSave} disabled={!isChanged}>

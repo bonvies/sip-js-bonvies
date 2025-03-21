@@ -18,11 +18,11 @@ const getLocalStorageValue = (key: string, defaultValue: string) => {
 };
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  displayName: import.meta.env.VITE_DISPLAY_NAME ?? getLocalStorageValue('displayName', ''),
-  sipDomain: import.meta.env.VITE_DOMIN ?? getLocalStorageValue('sipDomain', ''),
-  serverAddress: import.meta.env.VITE_ADDRESS ?? getLocalStorageValue('serverAddress', ''),
-  username: import.meta.env.VITE_USERNAME ?? getLocalStorageValue('username', ''),
-  password: import.meta.env.VITE_PASSWORD ?? getLocalStorageValue('password', ''),
+  displayName: getLocalStorageValue('displayName', ''),
+  sipDomain: getLocalStorageValue('sipDomain', ''),
+  serverAddress: getLocalStorageValue('serverAddress', ''),
+  username: getLocalStorageValue('username', ''),
+  password: getLocalStorageValue('password', ''),
   setDisplayName: (name) => set({ displayName: name }),
   setSipDomain: (domain) => set({ sipDomain: domain }),
   setServerAddress: (address) => set({ serverAddress: address }),
