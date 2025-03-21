@@ -198,7 +198,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       if (!localStream) {
         console.error('No local video stream found');
-        // setSipError('No local video stream found');
         return;
       }
 
@@ -255,7 +254,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSipState('Start');
       } catch (error) {
         console.error('Failed to start:', error);
-        // setSipError('Failed to start');
       }
 
       // 註冊 UserAgent
@@ -265,7 +263,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         setSipState('Registered');
       } catch (error) {
         console.error('Failed to register:', error);
-        // setSipError('Failed to register');
       }
 
       // 監聽來電事件
@@ -304,7 +301,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
 
                     if(!remoteAudioRef.current) {
                       console.error('No remote audio element found');
-                      // setSipError('No remote audio element found');
                       return;
                     }
                     remoteAudioRef.current.srcObject = remoteStream;
@@ -336,7 +332,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const startUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -345,7 +340,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent started');
     } catch (error) {
       console.error('Failed to start UserAgent:', error);
-      // setSipError('Failed to start UserAgent');
     }
   }, [setSipState]);
 
@@ -353,7 +347,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const stopUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      // setSipError('UserAgent not initialized');
       return;
     }
     try {
@@ -361,7 +354,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent stopped');
     } catch (error) {
       console.error('Failed to stop UserAgent:', error);
-      // setSipError('Failed to stop UserAgent');
     }
   }, [setSipState]);
 
@@ -369,7 +361,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const registerUserAgent = useCallback(async () => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -380,7 +371,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent registered');
     } catch (error) {
       console.error('Failed to register UserAgent:', error);
-      // setSipError('Failed to register UserAgent');
     }
   }, [setSipState]);
 
@@ -388,7 +378,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const unRegisterUserAgent = useCallback(async () => {
     if (!registererRef.current) {
       console.error('UserAgent not register');
-      // setSipError('UserAgent not register');
       return;
     }
 
@@ -397,7 +386,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       setSipState('UserAgent unregistered');
     } catch (error) {
       console.error('Failed to unregistered UserAgent:', error);
-      // setSipError('Failed to unregistered UserAgent');
     }
   }, [setSipState]);
 
@@ -409,7 +397,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     // 檢查 userAgentState 是否已經初始化
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      // setSipError('UserAgent not initialized');
       return;
     }
   
@@ -428,7 +415,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const makeCall = useCallback(async (phoneNumber: string) => {
     if (!userAgentRef.current) {
       console.error('UserAgent not initialized');
-      // setSipError('UserAgent not initialized');
       return;
     }
 
@@ -515,7 +501,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       inviterRef.current = inviter;
     } catch (error) {
       console.error('Failed to make call:', error);
-      // setSipError('Failed to make call');
     }
   }, [domainList, setSipState, setCallState, stopLocalVideo, stopRemoteVideo, stopRemoteAudio, playRingbackTone, stopRingbackTone, toggleVideo, setCallType]);
 
@@ -523,7 +508,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
   const answerCall = useCallback(async () => {
     if (!invitationRef.current) {
       console.error('Invitation not initialized');
-      // setSipError('Invitation not initialized');
       return;
     }
 
@@ -541,7 +525,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
     catch (error) {
       console.error('Failed to accept call:', error);
-      // setSipError('Failed to accept call');
     }
   }, []);
 
@@ -555,7 +538,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
-          // setSipError('Failed to end call');
         }
 
       } else {
@@ -564,7 +546,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
-          // setSipError('Failed to cancel call');
         }
       }
       inviterRef.current = null;
@@ -576,7 +557,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call ended");
         } catch (error) {
           console.error('Failed to end call:', error);
-          // setSipError('Failed to end call');
         }
       } else {
         try {
@@ -584,7 +564,6 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
           setSipState("Call canceled");
         } catch (error) {
           console.error('Failed to cancel call:', error);
-          // setSipError('Failed to cancel call');
         }
       }
       invitationRef.current = null;
