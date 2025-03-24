@@ -312,6 +312,9 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
               case SessionState.Terminated:
                 setCallState("Terminated");
                 stopRingkTone();
+                stopLocalVideo();
+                stopRemoteVideo();
+                stopRemoteAudio();
                 setTimeout(() => {
                   setCallType(null);
                   setCallState(null);
