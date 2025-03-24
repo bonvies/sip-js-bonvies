@@ -329,7 +329,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to create UserAgent:', error);
       return null;
     }
-  }, [uri, wsServer, displayName, username, password, setSipState, setCallType, setCallState, playRingTone, stopRingkTone, toggleVideo]);
+  }, [uri, wsServer, displayName, username, password, setSipState, setCallType, setCallState, playRingTone, stopRingkTone, stopLocalVideo, stopRemoteVideo, stopRemoteAudio, toggleVideo]);
 
   // 啟動 UserAgent
   const startUserAgent = useCallback(async () => {
