@@ -134,9 +134,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (remoteAudioElement && remoteAudioElement.srcObject) {
       const stream = remoteAudioElement.srcObject as MediaStream;
       stream.getTracks().forEach(track => {
-        if (track.kind === 'Audio') {
-          track.stop();
-        }
+        track.stop();
       });
       remoteAudioElement.srcObject = null;
     }
@@ -156,9 +154,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (remoteVideoElement && remoteVideoElement.srcObject) {
       const stream = remoteVideoElement.srcObject as MediaStream;
       stream.getTracks().forEach(track => {
-        if (track.kind === 'video') {
-          track.stop();
-        }
+        track.stop();
       });
       remoteVideoElement.srcObject = null;
     }
@@ -184,9 +180,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (localVideoElement && localVideoElement.srcObject) {
       const stream = localVideoElement.srcObject as MediaStream;
       stream.getTracks().forEach(track => {
-        if (track.kind === 'video') {
-          track.stop();
-        }
+        track.stop();
       });
       localVideoElement.srcObject = null;
     }
@@ -308,6 +302,9 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
               case SessionState.Terminated:
                 setCallState("Terminated");
                 stopRingkTone();
+                stopLocalVideo();
+                stopRemoteVideo();
+                stopRemoteAudio();
                 setTimeout(() => {
                   setCallType(null);
                   setCallState(null);
@@ -323,7 +320,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to create UserAgent:', error);
       return null;
     }
-  }, [uri, wsServer, displayName, username, password, setSipState, setCallType, setCallState, playRingTone, stopRingkTone, stopRemoteAudio]);
+  }, [uri, wsServer, displayName, username, password, setSipState, setCallType, setCallState, playRingTone, stopRingkTone, stopLocalVideo, stopRemoteVideo, stopRemoteAudio]);
 
   // 啟動 UserAgent
   const startUserAgent = useCallback(async () => {
@@ -495,8 +492,9 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
         case SessionState.Terminated:
           setCallState("Terminated");
           stopRingbackTone();
-          stopRemoteAudio();
+          stopLocalVideo();
           stopRemoteVideo();
+          stopRemoteAudio();
           setTimeout(() => {
             setCallType(null);
             setCallState(null);
@@ -514,7 +512,7 @@ export const SipCodeProvider: React.FC<{ children: ReactNode }> = ({ children })
       console.error('Failed to make call:', error);
       // setSipError('Failed to make call');
     }
-  }, [domainList, setSipState, setCallState, stopRingbackTone, stopRemoteAudio, stopRemoteVideo, playRingbackTone, setCallType]);
+  }, [domainList, setSipState, setCallState, stopRingbackTone, stopLocalVideo, stopRemoteVideo, stopRemoteAudio, playRingbackTone, setCallType]);
 
   // 接聽來電
   const answerCall = useCallback(async () => {
