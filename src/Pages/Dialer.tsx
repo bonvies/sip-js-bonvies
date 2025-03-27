@@ -87,7 +87,7 @@ export default function Dialer() {
     <>
       {!showVideo
         ? (
-        <Container maxWidth="xs" sx={{ mt: 4 }}>
+        <Container maxWidth="xs">
           <Typography variant="h4" align="center" sx={{ mb: 2 }}>
             {callNumber ? callNumber : '請輸入撥打號碼'}
           </Typography>

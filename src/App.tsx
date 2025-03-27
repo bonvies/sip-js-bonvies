@@ -1,12 +1,12 @@
-import { Container, Tabs, Tab } from '@mui/material';
+import { Container, Tabs, Tab, ThemeProvider } from '@mui/material';
 import { useContext, useState } from 'react';
 import Dialer from "./Pages/Dialer";
-import Calls from "./Pages/Calls";
 import Settings from "./Pages/Settings";
 import dtnf from './assets/dtmf.mp3';
 import ringbacktone from './assets/ringbacktone.mp3';
 import ringtone from './assets/ringtone.mp3';
 import SipCodeContext from './providers/SipCodeProvider';
+import theme from './theme';
 
 export default function App() {
   const [tabValue, setTabValue] = useState(0);
@@ -24,27 +24,33 @@ export default function App() {
   };
 
   return (
-    <Container sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Container maxWidth="xs">
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          variant="fullWidth"
+    <ThemeProvider theme={theme}>
+      <Container sx={{ display: "flex", justifyContent: "center", flexDirection: "column", height: "100%" }}>
+        <Container maxWidth="xs" sx={{ mb: 4 }}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant="fullWidth"
+          >
+            <Tab label="Dialer" />
+            <Tab label="Settings" />
+          </Tabs>
+        </Container>
+        <Container 
+          sx={{
+            display: "flex",
+            height: { xs: "100%", sm: "auto" },
+            position: 'relative' 
+          }}
         >
-          <Tab label="Dialer" />
-          <Tab label="Calls" />
-          <Tab label="Settings" />
-        </Tabs>
+          {tabValue === 0 && <Dialer />}
+          {tabValue === 1 && <Settings />}
+          <audio ref={remoteAudioRef} autoPlay />
+          <audio ref={dtmfAudioRef} src={dtnf} />
+          <audio ref={ringbackAudioRef} src={ringbacktone} />
+          <audio ref={ringtoneAudioRef} src={ringtone}/>
+        </Container>
       </Container>
-      <Container sx={{ display: "flex", flexGrow: 1, position: 'relative' }}>
-        {tabValue === 0 && <Dialer />}
-        {tabValue === 1 && <Calls />}
-        {tabValue === 2 && <Settings />}
-        <audio ref={remoteAudioRef} autoPlay />
-        <audio ref={dtmfAudioRef} src={dtnf} />
-        <audio ref={ringbackAudioRef} src={ringbacktone} />
-        <audio ref={ringtoneAudioRef} src={ringtone}/>
-      </Container>
-    </Container>
+    </ThemeProvider>
   );
 }

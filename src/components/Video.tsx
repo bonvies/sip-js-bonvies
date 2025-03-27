@@ -69,7 +69,7 @@ export default function Video(props: VideoProps) {
   }, [playLocalVideo, playRemoteAudio, playRemoteVideo, stopLocalVideo, stopRemoteAudio, stopRemoteVideo, toggleVideo]);
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
+    <Container className='sasa' sx={{ position: 'relative', display: 'flex', flexDirection: "column", overflow: 'hidden' }}>
       <ShowCallState />
       <Box 
         position='relative' 

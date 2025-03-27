@@ -67,7 +67,7 @@ export default function Settings() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
+    <Container maxWidth="sm">
       <Typography variant="h6" gutterBottom>
         SIP Display Name (Optional)
       </Typography>

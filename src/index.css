@@ -1,8 +1,9 @@
-body {
-  font-family: 'Roboto', sans-serif;
+html, body {
+  font-family: "Noto Sans TC", sans-serif;
+  font-weight: 500;
   background-color: white;
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100dvh;
 }
