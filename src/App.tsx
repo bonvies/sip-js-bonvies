@@ -46,6 +46,5 @@ export default function App() {
         <audio ref={ringtoneAudioRef} src={ringtone}/>
       </Container>
     </Container>
-
   );
 }
