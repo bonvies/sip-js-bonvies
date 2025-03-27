@@ -99,7 +99,7 @@ export default function Dialer() {
                   fullWidth
                   variant="outlined"
                   onClick={() => handleDialButtonClick(item)}
-                  sx={{ height: 60 }}
+                  sx={{ height: 50, fontSize: 24 }}
                 >
                   {item}
                 </Button>
@@ -176,31 +176,30 @@ export default function Dialer() {
             fullWidth
             variant="contained"
             color="primary"
-            onClick={(e) => handleCall(e, '0915970815')}
+            onClick={(e) => handleCall(e, '3009')}
             disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-            sx={{ mt: 2 }}
-          >
-            Call Leo
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            onClick={(e) => handleCall(e, '0902213273')}
-            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-            sx={{ mt: 2 }}
-          >
-            Call Aya
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            onClick={(e) => handleCall(e, '77505134')}
-            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, py: 1.5 }}
           >
             Call 智能客服中心
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={(e) => handleCall(e, '3004')}
+            disabled={callState === 'Establishing' || callState === 'Established' || callState === 'Terminated'}
+            sx={{ mt: 2, py: 1.5 }}
+          >
+            Call 視訊服務影像專員
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="error"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 2, py: 1.5 }}
+          >
+            重置系統
           </Button>
         </Container>
         ): <Video onToggleShowVideo={handleToggleShowVideo} onHandleHangUpCall={handleHangUpCall} />
